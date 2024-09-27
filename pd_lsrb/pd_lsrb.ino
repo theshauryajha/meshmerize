@@ -83,9 +83,7 @@ void loop(){
 
   // Check for intersection
   int intersectionType = checkIntersection();
-  if (intersectionType != 1){
-    handleIntersection(intersectionType);
-  }
+  handleIntersection(intersectionType);
 
   // Always use PID-controlled motor speeds
   driveMotors(leftSpeed, rightSpeed);
@@ -120,53 +118,6 @@ void driveMotorLeft(int left){
   analogWrite(LEFT_MOTOR_PWM, left);
 }
 
-int checkIntersection(){
-  bool left = sensorValues[0] > threshold;
-  bool right = sensorValues[7] > threshold;
-  bool straight = (sensorValues[3] > threshold || sensorValues[4] > threshold);
-  
-  if (left && straight && right) return 7;  // 4-way intersection
-  if (left && straight) return 6;
-  if (right && straight) return 5;
-  if (left && right) return 4; // T junction
-  if (left) return 3;
-  if (right) return 2;
-  if (straight) return 1; // no intersection
-  if (!left && !straight && !right) return 0; // dead end
-}
-
-void handleIntersection(int intersectionType){
-  // Slow down or stop briefly
-  int currentLeft = leftSpeed;
-  int currentRight = rightSpeed;
-  driveMotors(currentLeft / 2, currentRight / 2);
-  delay(50);
-
-  switch (intersectionType){
-    case 7: // 4-way intersection
-    case 6: // Left and straight
-    case 4: // T junction
-    case 3: // Left only
-      turnLeft();
-      path[pathLength++] = 'L';
-      break;
-    case 5: // Right and straight
-      // Continue straight
-      path[pathLength++] = 'S';
-      break;
-    case 2: // Right only
-      turnRight();
-      path[pathLength++] = 'R';
-      break;
-    case 0: // Dead end
-      turnAround();
-      path[pathLength++] = 'B';
-      break;
-  }
-
-  // Resume PID-controlled speed
-  driveMotors(currentLeft, currentRight);
-}
 
 void turnLeft(){
   while (sensorValues[0] > threshold || sensorValues[1] > threshold){
@@ -219,7 +170,7 @@ void turnAround(){
   }
 }
 
-int check_intersection(){
+int checkIntersection(){
   uint16_t right_sensor = sensorValues[7];
   uint16_t left_sensor = sensorValues[0];
   uint16_t sensor_4 = sensorValues[3];
@@ -274,6 +225,10 @@ int check_intersection(){
     path.push_back('B');
     return 8; //if there is no line then return 8;
   }
+}
+
+void handleIntersection(int intersectionType){
+  
 }
 
 //stop the bot
