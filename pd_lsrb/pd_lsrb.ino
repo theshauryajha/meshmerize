@@ -1,4 +1,5 @@
 #include <QTRSensors.h>
+#include <vector>
 
 // Motor and encoder pins
 //left motor pins
@@ -16,6 +17,9 @@
 // PD constants
 #define KP 0.1
 #define KD 0.5
+
+//LSRB dry run vector
+vector<char> path;
 
 // Sensor array
 QTRSensors qtr;
@@ -211,4 +215,76 @@ void turnAround(){
     qtr.readLineWhite(sensorValues);
     driveMotors(baseSpeed, -baseSpeed);
   }
+}
+
+int check_intersection(){
+  uint16_t right_sensor = sensorValues[7];
+  uint16_t left_sensor = sensorValues[0];
+  uint16_t sensor_4 = sensorValues[3];
+  uint16_t sensor_5 = sensorValues[4];
+
+  bool LINE = sensor_4 >= threshold && sensor_5 >= threshold;
+  bool RIGHT = LINE && right_sensor >= threshold;
+  bool LEFT = LINE && left_sensor >= threshold;
+
+  if(LINE){ //check is there is a line detected
+    if(RIGHT && LEFT){ //if line is there then check if there are right and left turns at the same place
+      extra_inch(); //if yes then run an extra inch and stop
+
+      bool if_end = check_end(LINE, RIGHT, LEFT); //check if we have reached the end of the maze or not
+
+      if(if_end){
+        return 0;
+      }
+
+      if(LINE){ //now check if there is a line or not
+        path.push_back('L')
+        return 4; //if line is there means it is a 4 way cross section thus return 4
+      }else{
+        path.push_back('L');
+        return 3; //if line is not there then it is a 3 way T junction with both right and left turn thus return 3 
+      }
+    }
+    else if(RIGHT){ //if there is only right turn
+      extra_inch(); //run an extra inch and stop
+
+      if(LINE){ //check for a line
+        path.push_back('S');
+        return 2; //if line is there means there is right turn and straight, return 2
+      }else{
+        path.push_back('R');
+        return 1; //if line is not there means it is a hard right, return 1
+      }
+    }
+    else if(LEFT){ //if there is only left turn
+      extra_inch(); //run an extra inch and stop
+
+      if(LINE){ //check for a line
+        path.push_back('L');
+        return 5; //if line is there then it is a 3 way junction with straight and left turn, return 5
+      }else{
+        path.push_back('L');
+        return 6; //if line is not there then it is a hard left, return 6
+      }
+    }
+    return 7; //if none of the cases are true means there is only a line, return 7
+  }else{
+    path.push_back('B');
+    return 8; //if there is no line then return 8;
+  }
+}
+
+//stop the bot
+void breaks(){
+  digitalWrite(RIGHT_MOTOR_PIN1, LOW);
+  digitalWrite(RIGHT_MOTOR_PIN2, LOW);
+
+  digitalWrite(LEFT_MOTOR_PIN1, LOW);
+  digitalWrite(LEFT_MOTOR_PIN2, LOW);
+}
+
+//the bot moves an extra inch and stops
+void extra_inch(){
+  delay(57);
+  breaks();
 }
