@@ -1,14 +1,18 @@
 #include <QTRSensors.h>
 
-// Sensor array (RC-type sensors)
-QTRSensorsRC qtr((const uint8_t[]){30, 31, 32, 33, 34, 35, 36, 37}, 8);  // Pass sensor pins directly to the constructor
+// Sensor array
+QTRSensors qtr;  // Generic QTRSensors object
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
 
 void setup(){
-  Serial.begin(9600);  // Initialize serial communication first
+  Serial.begin(9600);  // Start serial communication
 
-  // Calibrate sensors
+  // Configure sensor array for RC type sensors
+  qtr.setTypeRC();  // Set sensor type to RC
+  qtr.setSensorPins((const uint8_t[]){30, 31, 32, 33, 34, 35, 36, 37}, SensorCount);  // Set sensor pins
+  
+  // Calibrate the sensors
   calibrateSensors();
 }
 
@@ -23,15 +27,13 @@ void loop(){
   }
   Serial.println();
 
-  // Print the calculated line position
-  Serial.print("Line position: ");
-  Serial.println(position);
 
   delay(100);  // Small delay to avoid flooding the serial output
 }
 
+
 void calibrateSensors(){
-  digitalWrite(LED_BUILIIN, HIGH);
+  digitalWrite(LED_BUILTIN, HIGH);
   for (uint16_t i = 0; i < 400; i++){
     qtr.calibrate();
   }
