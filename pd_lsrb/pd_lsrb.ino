@@ -1,6 +1,8 @@
 #include <QTRSensors.h>
 #include <vector>
 
+using namespace std;
+
 // Motor and encoder pins
 //left motor pins
 #define LEFT_MOTOR_PIN1 2
