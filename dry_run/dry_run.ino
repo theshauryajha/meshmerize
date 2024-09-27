@@ -1,12 +1,16 @@
 #include <QTRSensors.h>
-#include <math.h>  
 
 // Motor and encoder pins
+//left motor pins
 #define LEFT_MOTOR_PIN1 2
 #define LEFT_MOTOR_PIN2 3
+#define LEFT_MOTOR_PWM 1 //dummy pin value
+#define LEFT_ENCODER_PIN 18
+
+//right motor pins
 #define RIGHT_MOTOR_PIN1 4
 #define RIGHT_MOTOR_PIN2 5
-#define LEFT_ENCODER_PIN 18
+#define RIGHT_MOTOR_PWM 10 //dummy pin value
 #define RIGHT_ENCODER_PIN 19
 
 // PD constants

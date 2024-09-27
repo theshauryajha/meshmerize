@@ -1,11 +1,16 @@
 #include <QTRSensors.h>
 
 // Motor and encoder pins
+//left motor pins
 #define LEFT_MOTOR_PIN1 2
 #define LEFT_MOTOR_PIN2 3
+#define LEFT_MOTOR_PWM 1 //dummy pin value
+#define LEFT_ENCODER_PIN 18
+
+//right motor pins
 #define RIGHT_MOTOR_PIN1 4
 #define RIGHT_MOTOR_PIN2 5
-#define LEFT_ENCODER_PIN 18
+#define RIGHT_MOTOR_PWM 10 //dummy pin value
 #define RIGHT_ENCODER_PIN 19
 
 // PD constants
@@ -36,10 +41,15 @@ void setup(){
   // Pin configurations
   pinMode(LEFT_MOTOR_PIN1, OUTPUT);
   pinMode(LEFT_MOTOR_PIN2, OUTPUT);
+  pinMode(LEFT_MOTOR_PWM, OUTPUT);
+  pinMode(LEFT_ENCODER_PIN, INPUT_PULLUP);
+
   pinMode(RIGHT_MOTOR_PIN1, OUTPUT);
   pinMode(RIGHT_MOTOR_PIN2, OUTPUT);
-  pinMode(LEFT_ENCODER_PIN, INPUT_PULLUP);
+  pinMode(RIGHT_MOTOR_PWM, OUTPUT);
   pinMode(RIGHT_ENCODER_PIN, INPUT_PULLUP);
+
+  pinMode(LED_BUILTIN, OUTPUT);
 
   // Configure sensor array
   qtr.setTypeRC();
@@ -78,17 +88,30 @@ void loop(){
 }
 
 void calibrateSensors(){
+  digitalWrite(LED_BUILIIN, HIGH);
   for (uint16_t i = 0; i < 400; i++){
     qtr.calibrate();
-    delay(20);
   }
+  digitalWrite(LED_BUILTIN, LOW); //calibration takes 10s, led will be on for 10s
 }
 
 void driveMotors(int left, int right){
-  analogWrite(LEFT_MOTOR_PIN1, left);
-  analogWrite(LEFT_MOTOR_PIN2, 0);
-  analogWrite(RIGHT_MOTOR_PIN1, right);
-  analogWrite(RIGHT_MOTOR_PIN2, 0);
+  driveMotorLeft(left);
+  driveMotorRight(right);
+}
+
+void driveMotorRight(int right){
+  digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
+  digitalWrite(RIGHT_MOTOR_PIN2, LOW);
+
+  analogWrite(RIGHT_MOTOR_PWM, right);
+}
+
+void driveMotorLeft(int left){
+  digitalWrite(LEFT_MOTOR_PIN1, HIGH);
+  digitalWrite(LEFT_MOTOR_PIN2, LOW);
+
+  analogWrite(LEFT_MOTOR_PWM, left);
 }
 
 int checkIntersection(){
@@ -96,14 +119,14 @@ int checkIntersection(){
   bool right = sensorValues[7] > threshold;
   bool straight = (sensorValues[3] > threshold || sensorValues[4] > threshold);
   
-  if (left && right && straight) return 7;  // 4-way intersection
+  if (left && straight && right) return 7;  // 4-way intersection
   if (left && straight) return 6;
   if (right && straight) return 5;
   if (left && right) return 4; // T junction
   if (left) return 3;
   if (right) return 2;
   if (straight) return 1; // no intersection
-  if (!left && !right && !straight) return 0; // dead end
+  if (!left && !straight && !right) return 0; // dead end
 }
 
 void handleIntersection(int intersectionType){
