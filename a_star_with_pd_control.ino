@@ -24,11 +24,25 @@ int maze[GRID_ROWS][GRID_COLS] = {
   {0, 0, 0, 0, 0}
 };
 
-struct Node {
-  int x, y;
-  int g, h, f;
-  Node *parent;
-};
+// Constants for calculating distance and turns
+#define WHEEL_DIAMETER 4.3 // in cm
+#define PULSES_PER_REVOLUTION 20
+#define DISTANCE_PER_PULSE (PI * WHEEL_DIAMETER / PULSES_PER_REVOLUTION) // cm/pulse
+#define GRID_STEP_SIZE 3.0 // Distance to move in one step, in cm
+#define TURN_PULSES 12 // Number of pulses required for a 90-degree turn (based on calculation)
+
+// Encoder count variables
+volatile int leftEncoderCount = 0;
+volatile int rightEncoderCount = 0;
+
+// Encoder interrupt service routines
+void leftEncoderISR() {
+  leftEncoderCount++;
+}
+
+void rightEncoderISR() {
+  rightEncoderCount++;
+}
 
 // Path array to store steps
 Node* path[GRID_ROWS * GRID_COLS];
@@ -133,39 +147,59 @@ void pdControl() {
   analogWrite(motor1Pin1, motorSpeedLeft);
   analogWrite(motor2Pin1, motorSpeedRight);
 }
+
 void moveForwardPD() {
+  int targetPulses = GRID_STEP_SIZE / DISTANCE_PER_PULSE;
+  leftEncoderCount = 0;
+  rightEncoderCount = 0;
+
   while (true) {
     pdControl();
-    if (/* distance condition using encoders */) {
+    if (leftEncoderCount >= targetPulses && rightEncoderCount >= targetPulses) {
       break;
     }
   }
+
+  analogWrite(motor1Pin1, 0);
+  analogWrite(motor2Pin1, 0);
 }
 
 void turnLeftPD() {
+  leftEncoderCount = 0;
+  rightEncoderCount = 0;
+
   while (true) {
     analogWrite(motor1Pin1, 0);
     analogWrite(motor2Pin1, baseSpeed);
 
     pdControl();
 
-    if (/* encoder indicates 90-degree turn */) {
+    if (leftEncoderCount >= TURN_PULSES || rightEncoderCount >= TURN_PULSES) {
       break;
     }
   }
+
+  analogWrite(motor1Pin1, 0);
+  analogWrite(motor2Pin1, 0);
 }
 
 void turnRightPD() {
+  leftEncoderCount = 0;
+  rightEncoderCount = 0;
+
   while (true) {
     analogWrite(motor1Pin1, baseSpeed);
     analogWrite(motor2Pin1, 0);
 
     pdControl();
 
-    if (/* encoder indicates 90-degree turn */) {
+    if (leftEncoderCount >= TURN_PULSES || rightEncoderCount >= TURN_PULSES) {
       break;
     }
   }
+
+  analogWrite(motor1Pin1, 0);
+  analogWrite(motor2Pin1, 0);
 }
 
 // Execute path 
@@ -204,6 +238,12 @@ void setup() {
     pinMode(sensorPins[i], INPUT);
   }
 
+  pinMode(2, INPUT_PULLUP);
+  pinMode(3, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(2), leftEncoderISR, RISING);
+  attachInterrupt(digitalPinToInterrupt(3), rightEncoderISR, RISING);
+
   Serial.begin(9600);
 
   aStar(0, 0, 4, 4);  // Execute A* 
@@ -212,5 +252,4 @@ void setup() {
 }
 
 void loop() {
-  // Loops in case we need restarts
 }
