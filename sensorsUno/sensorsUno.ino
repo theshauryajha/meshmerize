@@ -1,7 +1,7 @@
 #include <QTRSensors.h>
 
 // Sensor array (RC-type sensors)
-QTRSensorsRC qtr((const uint8_t[]){30, 31, 32, 33, 34, 35, 36, 37}, 8);  // Pass sensor pins directly to the constructor
+QTRSensorsRC qtr((const uint8_t[]){A0, A1, A2, A3, A4, A5, 5, 6}, 8);  // Pass sensor pins directly to the constructor
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
 
