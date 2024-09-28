@@ -1,7 +1,7 @@
 #include <QTRSensors.h>
 
 // Sensor array
-QTRSensors qtr;  // Generic QTRSensors object
+QTRSensors qtr;
 const uint8_t SensorCount = 8;
 uint16_t sensorValues[SensorCount];
 
