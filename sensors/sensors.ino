@@ -1,16 +1,16 @@
-#define O1 A0
-#define O2 A1
-#define O3 A2
-#define O4 A3
-#define O5 A4
+#define LEFT A0
+#define LEFT_CENTER A1
+#define CENTER A2
+#define RIGHT_CENTER A3
+#define RIGHT A4
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(O1, INPUT);
-  pinMode(O2, INPUT);
-  pinMode(O3, INPUT);
-  pinMode(O4, INPUT);
-  pinMode(O5, INPUT);
+  pinMode(LEFT, INPUT);
+  pinMode(LEFT_CENTER, INPUT);
+  pinMode(CENTER, INPUT);
+  pinMode(RIGHT_CENTER, INPUT);
+  pinMode(RIGHT, INPUT);
 
   Serial.begin(9600);
 
@@ -19,13 +19,19 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  int sensor1 = analogRead(O1);
-  int sensor2 = analogRead(O2);
-  int sensor3 = analogRead(O3);
-  int sensor4 = analogRead(O4);
-  int sensor5 = analogRead(O5);
+  int sensor1 = analogRead(LEFT);
+  int sensor2 = analogRead(LEFT_CENTER);
+  int sensor3 = analogRead(CENTER);
+  int sensor4 = analogRead(RIGHT_CENTER);
+  int sensor5 = analogRead(RIGHT);
 
-  int sensorArray[5] = {sensor1, sensor2, sensor3, sensor4, sensor5};
-  
-  Serial.println(sensorArray[4]);
+  int sensorValues[5] = {sensor1, sensor2, sensor3, sensor4, sensor5};
+
+  for (int i = 0; i < 5; i++) {
+    Serial.print(sensorValues[i]);
+    Serial.print('\t');
+  }
+  Serial.println();
+
+  delay(100);
 }
