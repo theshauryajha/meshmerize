@@ -1,44 +1,31 @@
-#include <QTRSensors.h>
+#define O1 A0
+#define O2 A1
+#define O3 A2
+#define O4 A3
+#define O5 A4
 
-// Sensor array
-QTRSensors qtr;
-const uint8_t SensorCount = 8;
-uint16_t sensorValues[SensorCount];
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(O1, INPUT);
+  pinMode(O2, INPUT);
+  pinMode(O3, INPUT);
+  pinMode(O4, INPUT);
+  pinMode(O5, INPUT);
 
-void setup(){
-  Serial.begin(9600);  // Start serial communication
+  Serial.begin(9600);
 
-  // Configure sensor array for RC type sensors
+}
 
-  //RC: Higher Values (~2500) represent darker surface, Lower Values (~0) represent whiter surface
-  qtr.setTypeRC();  // Set sensor type to RC
-  qtr.setSensorPins((const uint8_t[]){30, 31, 32, 33, 34, 35, 36, 37}, SensorCount);  // Set sensor pins
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  int sensor1 = analogRead(O1);
+  int sensor2 = analogRead(O2);
+  int sensor3 = analogRead(O3);
+  int sensor4 = analogRead(O4);
+  int sensor5 = analogRead(O5);
+
+  int sensorArray[5] = {sensor1, sensor2, sensor3, sensor4, sensor5};
   
-  // Calibrate the sensors
-  calibrateSensors();
-}
-
-void loop(){
-  // Read sensor values and get the position of the white line
-  uint16_t position = qtr.readLineWhite(sensorValues);
-
-
-  // Print sensor values
-  for (int i = 0; i < SensorCount; i++){
-    Serial.print(sensorValues[i]);
-    Serial.print("\t");
-  }
-  Serial.println();
-
-
-  delay(100);  // Small delay to avoid flooding the serial output
-}
-
-
-void calibrateSensors(){
-  digitalWrite(LED_BUILTIN, HIGH);
-  for (uint16_t i = 0; i < 400; i++){
-    qtr.calibrate();
-  }
-  digitalWrite(LED_BUILTIN, LOW); //calibration takes 10s, led will be on for 10s
+  Serial.println(sensorArray[4]);
 }
