@@ -9,6 +9,8 @@ void setup(){
   Serial.begin(9600);  // Start serial communication
 
   // Configure sensor array for RC type sensors
+
+  //RC: Higher Values (~2500) represent darker surface, Lower Values (~0) represent whiter surface
   qtr.setTypeRC();  // Set sensor type to RC
   qtr.setSensorPins((const uint8_t[]){30, 31, 32, 33, 34, 35, 36, 37}, SensorCount);  // Set sensor pins
   
@@ -19,6 +21,7 @@ void setup(){
 void loop(){
   // Read sensor values and get the position of the white line
   uint16_t position = qtr.readLineWhite(sensorValues);
+
 
   // Print sensor values
   for (int i = 0; i < SensorCount; i++){
