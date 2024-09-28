@@ -1,33 +1,31 @@
-#define LEFT 15
-#define LEFT_CENTER 14
-#define CENTER 13
-#define RIGHT_CENTER 12
-#define RIGHT 11
+#define leftMostSensor 15
+#define leftCenterSensor 14
+#define centerSensor 13
+#define rightCenterSensor 12
+#define rightMostSensor 11
 
-void setup() {
+void setup(){
   // put your setup code here, to run once:
-  pinMode(LEFT, INPUT);
-  pinMode(LEFT_CENTER, INPUT);
-  pinMode(CENTER, INPUT);
-  pinMode(RIGHT_CENTER, INPUT);
-  pinMode(RIGHT, INPUT);
+  pinMode(leftMostSensor, INPUT);
+  pinMode(leftCenterSensor, INPUT);
+  pinMode(centerSensor, INPUT);
+  pinMode(rightCenterSensor, INPUT);
+  pinMode(rightMostSensor, INPUT);
 
   Serial.begin(9600);
-
 }
 
-void loop() {
+void loop(){
   // put your main code here, to run repeatedly:
+  int sensor1 = analogRead(leftMostSensor);
+  int sensor2 = analogRead(leftCenterSensor);
+  int sensor3 = analogRead(centerSensor);
+  int sensor4 = analogRead(rightCenterSensor);
+  int sensor5 = analogRead(rightMostSensor);
 
-  int sensor1 = analogRead(LEFT);
-  int sensor2 = analogRead(LEFT_CENTER);
-  int sensor3 = analogRead(CENTER);
-  int sensor4 = analogRead(RIGHT_CENTER);
-  int sensor5 = analogRead(RIGHT);
+  int sensorValues[5] ={sensor1, sensor2, sensor3, sensor4, sensor5};
 
-  int sensorValues[5] = {sensor1, sensor2, sensor3, sensor4, sensor5};
-
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 5; i++){
     Serial.print(sensorValues[i]);
     Serial.print('\t');
   }

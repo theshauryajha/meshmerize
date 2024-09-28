@@ -21,55 +21,56 @@
 #define baseSpeed 120
 
 // variables for sensor values
-int l, lc, c, rc, r;
+int sensor1, sensor2, sensor3, sensor4, sensor5;
 
-void setup() {
-    // setup sensor pins as input
-    pinMode(leftMostSensor, INPUT);
-    pinMode(leftCenterSensor, INPUT);
-    pinMode(centerSensor, INPUT);
-    pinMode(rightCenterSensor, INPUT);
-    pinMode(rightMostSensor, INPUT);
+void setup(){
+  // setup sensor pins as input
+  pinMode(leftMostSensor, INPUT);
+  pinMode(leftCenterSensor, INPUT);
+  pinMode(centerSensor, INPUT);
+  pinMode(rightCenterSensor, INPUT);
+  pinMode(rightMostSensor, INPUT);
 
-    // setup motor pins as output
-    pinMode(leftMotor1 ,OUTPUT);
-    pinMode(leftMotor2 ,OUTPUT);
-    pinMode(leftMotorPWM ,OUTPUT);
-    pinMode(rightMotor1 ,OUTPUT);
-    pinMode(rightMotor2 ,OUTPUT);
-    pinMode(rightMotorPWM ,OUTPUT);
+  // setup motor pins as output
+  pinMode(leftMotor1 ,OUTPUT);
+  pinMode(leftMotor2 ,OUTPUT);
+  pinMode(leftMotorPWM ,OUTPUT);
+  pinMode(rightMotor1 ,OUTPUT);
+  pinMode(rightMotor2 ,OUTPUT);
+  pinMode(rightMotorPWM ,OUTPUT);
 
-    // setup standby pin, initally high, low to kill motors
-    pinMode(STDBY ,OUTPUT);
+  // setup standby pin, initally high, low to kill motors
+  pinMode(STDBY ,OUTPUT);
+  digitalWrite(STDBY, HIGH);
+}
+
+void loop(){
+  // read sensor values and store
+  readSensorValues();
+  
+  // drive motors according to sensor values
+  if (sensor1 > th && sensor2 < th && sensor3 < th && sensor4 < th && sensor5 > th){
     digitalWrite(STDBY, HIGH);
+    driveMotors(baseSpeed, baseSpeed);
+  }
+  else
+    digitalWrite(STDBY, LOW);
 }
 
-void loop() {
-    read();
-    
-    if (l > th && lc < th && c < th && rc < th && r > th){
-      digitalWrite(STDBY, HIGH);
-      driveMotors(baseSpeed, baseSpeed);
-    }
-    else
-      digitalWrite(STDBY, LOW);
-    
+void readSensorValues(){
+  sensor1 = analogRead(leftMostSensor);
+  sensor2 = analogRead(leftCenterSensor);
+  sensor3 = analogRead(centerSensor);
+  sensor4 = analogRead(rightCenterSensor);
+  sensor5 = analogRead(rightMostSensor);
 }
 
-void read() {
-    l = analogRead(leftMostSensor);
-    lc = analogRead(leftCenterSensor);
-    c = analogRead(centerSensor);
-    rc = analogRead(rightCenterSensor);
-    r = analogRead(rightMostSensor);
-}
+void driveMotors(int left, int right){
+  digitalWrite(leftMotor1, HIGH);
+  digitalWrite(leftMotor2, LOW);
+  digitalWrite(rightMotor1, HIGH);
+  digitalWrite(rightMotor2, LOW);
 
-void driveMotors(int left, int right) {
-    digitalWrite(leftMotor1, HIGH);
-    digitalWrite(leftMotor2, LOW);
-    digitalWrite(rightMotor1, HIGH);
-    digitalWrite(rightMotor2, LOW);
-
-    analogWrite(leftMotorPWM, left);
-    analogWrite(rightMotorPWM, right);
+  analogWrite(leftMotorPWM, left);
+  analogWrite(rightMotorPWM, right);
 }

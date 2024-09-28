@@ -1,41 +1,42 @@
-#define LEFT1 2
-#define LEFT2 3
-#define LEFT_PWM 6
-#define RIGHT1 4
-#define RIGHT2 5
-#define RIGHT_PWM 7
+#define leftMotor1 2
+#define leftMotor2 3
+#define leftMotorPWM 6
+#define rightMotor1 4
+#define rightMotor2 5
+#define rightMotorPWM 7
 #define STDBY 8
 
-void setup() {
+void setup(){
   // put your setup code here, to run once:
-  pinMode(LEFT1, OUTPUT);
-  pinMode(LEFT2, OUTPUT);
-  pinMode(LEFT_PWM, OUTPUT);
-  pinMode(RIGHT1, OUTPUT);
-  pinMode(RIGHT2, OUTPUT);
-  pinMode(RIGHT_PWM, OUTPUT);
-  pinMode(STDBY, OUTPUT);
+  pinMode(leftMotor1 ,OUTPUT);
+  pinMode(leftMotor2 ,OUTPUT);
+  pinMode(leftMotorPWM ,OUTPUT);
+  pinMode(rightMotor1 ,OUTPUT);
+  pinMode(rightMotor2 ,OUTPUT);
+  pinMode(rightMotorPWM ,OUTPUT);
 
   digitalWrite(STDBY, HIGH);
 }
 
-void loop() {
+void loop(){
   // put your main code here, to run repeatedly:
-  driveMotorRight(150);
-  driveMotorLeft(150);
+  driveMotorRight(120);
+  driveMotorLeft(120);
 
-  delay(3000);
+  delay(3000); // run for 3 seconds
   digitalWrite(STDBY, LOW);
 }
 
 void driveMotorRight(int right){
-  digitalWrite(RIGHT1, HIGH);
-  digitalWrite(RIGHT2, LOW);
-  analogWrite(RIGHT_PWM, right);
+  digitalWrite(rightMotor1, HIGH);
+  digitalWrite(rightMotor2 LOW);
+
+  analogWrite(rightMotorPWM, right);
 }
 
 void driveMotorLeft(int left){
-  digitalWrite(LEFT1, HIGH);
-  digitalWrite(LEFT2, LOW);
-  analogWrite(LEFT_PWM, left);
+  digitalWrite(leftMotor1, HIGH);
+  digitalWrite(leftMotor2, LOW);
+
+  analogWrite(leftMotorPWM, left);
 }
