@@ -18,7 +18,7 @@ void setup(){
 
 void loop(){
   // Read sensor values and get the position of the white line
-  uint16_t position = qtr.readLineBlack(sensorValues);
+  uint16_t position = qtr.readLineWhite(sensorValues);
 
   // Print sensor values
   for (int i = 0; i < SensorCount; i++){
