@@ -1,8 +1,8 @@
-#define LEFT A0
-#define LEFT_CENTER A1
-#define CENTER A2
-#define RIGHT_CENTER A3
-#define RIGHT A4
+#define LEFT 15
+#define LEFT_CENTER 14
+#define CENTER 13
+#define RIGHT_CENTER 12
+#define RIGHT 11
 
 void setup() {
   // put your setup code here, to run once:
