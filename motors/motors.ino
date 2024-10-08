@@ -29,7 +29,7 @@ void loop(){
 
 void driveMotorRight(int right){
   digitalWrite(rightMotor1, HIGH);
-  digitalWrite(rightMotor2 LOW);
+  digitalWrite(rightMotor2, LOW);
 
   analogWrite(rightMotorPWM, right);
 }

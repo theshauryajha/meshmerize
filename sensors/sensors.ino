@@ -1,4 +1,4 @@
-int sensorCount = 8;
+const int sensorCount = 8;
 int sensorValues[sensorCount];
 
 void setup(){
