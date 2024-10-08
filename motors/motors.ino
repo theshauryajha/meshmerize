@@ -8,12 +8,12 @@
 
 void setup(){
   // put your setup code here, to run once:
-  pinMode(leftMotor1 ,OUTPUT);
-  pinMode(leftMotor2 ,OUTPUT);
-  pinMode(leftMotorPWM ,OUTPUT);
-  pinMode(rightMotor1 ,OUTPUT);
-  pinMode(rightMotor2 ,OUTPUT);
-  pinMode(rightMotorPWM ,OUTPUT);
+  pinMode(leftMotor1,OUTPUT);
+  pinMode(leftMotor2,OUTPUT);
+  pinMode(leftMotorPWM,OUTPUT);
+  pinMode(rightMotor1,OUTPUT);
+  pinMode(rightMotor2,OUTPUT);
+  pinMode(rightMotorPWM,OUTPUT);
 
   digitalWrite(STDBY, HIGH);
 }
