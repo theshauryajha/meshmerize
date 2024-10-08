@@ -20,7 +20,7 @@ void setup(){
 
 void loop(){
   // put your main code here, to run repeatedly:
-  driveMotors(120, 120);
+  driveMotors(150, 150);
 
   delay(3000); // run for 3 seconds
   digitalWrite(STDBY, LOW);
@@ -40,7 +40,7 @@ void driveMotorLeft(int left){
 
 void driveMotorRight(int right){
   digitalWrite(rightMotor1, HIGH);
-  digitalWrite(rightMotor2 LOW);
+  digitalWrite(rightMotor2, LOW);
 
   analogWrite(rightMotorPWM, right);
 }
