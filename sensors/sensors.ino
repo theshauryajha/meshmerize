@@ -1,11 +1,16 @@
- 0int sensorCount = 8;
+int sensorCount = 8;
 int sensorValues[sensorCount];
 
 void setup(){
   // put your setup code here, to run once:
-  for (int i = 11; i <= 18; i++){
-    pinMode(i, INPUT);
-  }
+  pinMode(A0,INPUT);
+  pinMode(A1,INPUT);
+  pinMode(A2,INPUT);
+  pinMode(A3,INPUT);
+  pinMode(A4,INPUT);
+  pinMode(A5,INPUT);
+  pinMode(A6,INPUT);
+  pinMode(A7,INPUT);
 
   Serial.begin(9600);
 }
@@ -23,7 +28,12 @@ void loop(){
 }
 
 void read(){
-  for (int i = 0; i < 8; i++){
-    sensorValues[i] = analogRead(i+11);
-  }
+  sensorValues[0] = analogRead(A0);
+  sensorValues[1] = analogRead(A1);
+  sensorValues[2] = analogRead(A2);
+  sensorValues[3] = analogRead(A3);
+  sensorValues[4] = analogRead(A4);
+  sensorValues[5] = analogRead(A5);
+  sensorValues[6] = analogRead(A6);
+  sensorValues[7] = analogRead(A7);  
 }
