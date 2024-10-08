@@ -14,14 +14,21 @@
 #define rightCenterSensor 12
 #define rightMostSensor 11
 
-// threshold to detect white line
-#define th 100
-
 // speed control variables
 #define baseSpeed 120
 
-// variables for sensor values
-int sensor1, sensor2, sensor3, sensor4, sensor5;
+// array for sensor values
+#define sensorCount 5
+int sensorValues[sensorCount];
+
+// define potential states of sensorValues
+int straight[] = {0, 1, 1, 1, 0};
+int slightLeft[] = {0, 1, 1, 0, 0};
+int slightRight[] = {0, 0, 1, 1, 0};
+int left[] = {0, 1, 0, 0, 0};
+int right[] = {0, 0, 0, 1, 0};
+int hardLeft[] = {1, 0, 0, 0, 0};
+int hardRight[] = {0, 0, 0, 0, 1};
 
 void setup(){
   // setup sensor pins as input
@@ -44,25 +51,17 @@ void setup(){
   digitalWrite(STDBY, HIGH);
 }
 
-void loop(){
+void loop() {
   // read sensor values and store
   readSensorValues();
-  
-  // drive motors according to sensor values
-  if (sensor1 > th && sensor2 < th && sensor3 < th && sensor4 < th && sensor5 > th){
-    digitalWrite(STDBY, HIGH);
-    driveMotors(baseSpeed, baseSpeed);
-  }
-  else
-    digitalWrite(STDBY, LOW);
 }
 
 void readSensorValues(){
-  sensor1 = analogRead(leftMostSensor);
-  sensor2 = analogRead(leftCenterSensor);
-  sensor3 = analogRead(centerSensor);
-  sensor4 = analogRead(rightCenterSensor);
-  sensor5 = analogRead(rightMostSensor);
+  sensorValues[0] = digitalRead(leftMostSensor);
+  sensorValues[1] = digitalRead(leftCenterSensor);
+  sensorValues[2] = digitalRead(centerSensor);
+  sensorValues[3] = digitalRead(rightCenterSensor);
+  sensorValues[4] = digitalRead(rightMostSensor);
 }
 
 void driveMotors(int left, int right){
