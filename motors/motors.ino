@@ -1,46 +1,66 @@
-#define leftMotor1 2
-#define leftMotor2 3
-#define leftMotorPWM 6
-#define rightMotor1 4
-#define rightMotor2 5
-#define rightMotorPWM 7
-#define STDBY 8
+int leftMotor1 = 2;
+int leftMotor2 = 4;
+
+int rightMotor1 = 17;
+int rightMotor2 = 5;
+
+int rightMotorPWM = 16;
+int leftMotorPWM = 18;
+
+int baseSpeed = 150;
 
 void setup(){
-  // put your setup code here, to run once:
-  pinMode(leftMotor1,OUTPUT);
-  pinMode(leftMotor2,OUTPUT);
-  pinMode(leftMotorPWM,OUTPUT);
-  pinMode(rightMotor1,OUTPUT);
-  pinMode(rightMotor2,OUTPUT);
-  pinMode(rightMotorPWM,OUTPUT);
-
-  digitalWrite(STDBY, HIGH);
+  pinMode(leftMotor1, OUTPUT);
+  pinMode(leftMotor2, OUTPUT);
+  pinMode(rightMotor1, OUTPUT);
+  pinMode(rightMotor2, OUTPUT);
+  pinMode(leftMotorPWM, OUTPUT);
+  pinMode(rightMotorPWM, OUTPUT);
 }
 
 void loop(){
-  // put your main code here, to run repeatedly:
-  driveMotors(150, 150);
-
-  delay(3000); // run for 3 seconds
-  digitalWrite(STDBY, LOW);
-}       
-
-void driveMotors(int left, int right){
-  driveMotorLeft(left);
-  driveMotorRight(right);
+  driveMotors(baseSpeed, baseSpeed, 0, 0);
+  stopMotors();
 }
 
-void driveMotorLeft(int left){
-  digitalWrite(leftMotor1, HIGH);
-  digitalWrite(leftMotor2, LOW);
+void driveRight(int rightPWM, int mode){ //mode 0 means clockwise, mode 1 means anti clockwise
+  switch(mode){
+    case 0:
+    digitalWrite(rightMotor1, HIGH);
+    digitalWrite(rightMotor2, LOW);
+    break
+    case 1:
+    digitalWrite(rightMotor1, LOW);
+    digitalWrite(rightMotor2, HIGH);
+    break
+  }
 
-  analogWrite(leftMotorPWM, left);
+  analogWrite(rightMotorPWM, rightPWM);
 }
 
-void driveMotorRight(int right){
-  digitalWrite(rightMotor1, HIGH);
+void driveLeft(int leftPWM, int mode){ //mode 0 means clockwise, mode 1 means anti clockwise
+  switch(mode){
+    case 0:
+    digitalWrite(leftMotor1, HIGH);
+    digitalWrite(leftMotor2, LOW);
+    break
+    case 1:
+    digitalWrite(leftMotor1, LOW);
+    digitalWrite(leftMotor2, HIGH);
+    break
+  }
+
+  analogWrite(leftMotorPWM, leftPWM);
+}
+
+void driveMotors(int rightPWM, int leftPWM, int rightMode, int leftMode){
+  driveRight(rightPWM, rightMode);
+  driveLeft(leftPWM, leftMode);
+}
+
+void stopMotors(){
+  digitalWrite(rightMotor1, LOW);
   digitalWrite(rightMotor2, LOW);
-
-  analogWrite(rightMotorPWM, right);
+  digitalWrite(leftMotor1, LOW);
+  digitalWrite(leftMotor2, LOW);
 }
