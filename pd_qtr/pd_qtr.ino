@@ -1,102 +1,89 @@
-#include <QTRSensors.h>
+//PD control properties
+int kp = 0; //proportional gain
+int kd = 0; //derivative
+int lastError = 0; //check previous error to calculate error difference
 
-// Motor and encoder pins
-//left motor pins
-#define LEFT_MOTOR_PIN1 2
-#define LEFT_MOTOR_PIN2 3
-#define LEFT_MOTOR_PWM 1 //dummy pin value
-#define LEFT_ENCODER_PIN 18
+//right motor properties
+int RIGHT_MOTOR_3 = 32; //IN3
+int RIGHT_MOTOR_4 = 35; //IN4
+int RIGHT_PWM = 34;
 
-//right motor pins
-#define RIGHT_MOTOR_PIN1 4
-#define RIGHT_MOTOR_PIN2 5
-#define RIGHT_MOTOR_PWM 10 //dummy pin value
-#define RIGHT_ENCODER_PIN 19
+//left motor properties
+int LEFT_MOTOR_1 = 25; //IN1
+int LEFT_MOTOR_2 = 33; //IN2
+int LEFT_PWM = 26;
 
-// PD constants
-#define KP 0.1
-#define KD 0.5
+//general motor properties
+int BASE_SPEED = 150;
+int motorPins[6] = {RIGHT_MOTOR_3, RIGHT_MOTOR_4, RIGHT_PWM, LEFT_MOTOR_1, LEFT_MOTOR_2, LEFT_PWM};
 
-// Sensor array
-QTRSensors qtr;
-const uint8_t SensorCount = 8;
-uint16_t sensorValues[SensorCount];
+// sensor array properties
+int SensorPins[8] = {15, 2, 0, 4, 16, 17, 5, 18}; //left to right, A8 to A1
 
-// Motor control variables
-int leftSpeed = 0;
-int rightSpeed = 0;
-const int baseSpeed = 150;
-
-// Error variable
-int lastError = 0;
-
-void setup(){
-  // Pin configurations
-  pinMode(LEFT_MOTOR_PIN1, OUTPUT);
-  pinMode(LEFT_MOTOR_PIN2, OUTPUT);
-  pinMode(LEFT_MOTOR_PWM, OUTPUT);
-  pinMode(LEFT_ENCODER_PIN, INPUT_PULLUP);
-
-  pinMode(RIGHT_MOTOR_PIN1, OUTPUT);
-  pinMode(RIGHT_MOTOR_PIN2, OUTPUT);
-  pinMode(RIGHT_MOTOR_PWM, OUTPUT);
-  pinMode(RIGHT_ENCODER_PIN, INPUT_PULLUP);
-
-  pinMode(LED_BUILTIN, OUTPUT);
-
-  // Configure sensor array
-  qtr.setTypeRC();
-  qtr.setSensorPins((const uint8_t[]){30, 31, 32, 33, 34, 35, 36, 37}, SensorCount);
-  
-  calibrateSensors();
-
-  Serial.begin(9600);
-}
-
-void loop(){
-  // Read sensor values
-  uint16_t position = qtr.readLineWhite(sensorValues);
-
-  // PD calculation
-  int error = position - 3500;
-  int derivative = error - lastError;
-  int motorSpeed = KP * error + KD * derivative;
-
-  leftSpeed = baseSpeed + motorSpeed;
-  rightSpeed = baseSpeed - motorSpeed;
-
-  leftSpeed = constrain(leftSpeed, 50, 255);
-  rightSpeed = constrain(rightSpeed, 50, 255);
-
-  // Always use PID-controlled motor speeds
-  driveMotors(leftSpeed, rightSpeed);
-
-  lastError = error;
-}
-
-void calibrateSensors(){
-  digitalWrite(LED_BUILIIN, HIGH);
-  for (uint16_t i = 0; i < 400; i++){
-    qtr.calibrate();
+void setup() {
+  // put your setup code here, to run once:
+  for(int i = 0; i < 6; i++){
+    pinMode(motorPins[i], OUTPUT); //set all motor pins to output;
   }
-  digitalWrite(LED_BUILTIN, LOW); //calibration takes 10s, led will be on for 10s
+
+  for(int i = 0; i < 8; i++){
+    pinMode(SensorPins[i], INPUT); //set sensor array pins to input
+  }
+  Serial.begin(9600); //begin serial monitor for debugging
+  Serial.println();
 }
 
-void driveMotors(int left, int right){
-  driveMotorLeft(left);
-  driveMotorRight(right);
+void loop() {
+  // put your main code here, to run repeatedly:
+  int position = readPosition(); //reading the position based on raw sensor values
+
+  int goal = 3500; //this is the goal where error will be zero
+
+  int error = goal - position; //calculate error, left side positive, right side negative
+
+  int adjustment = kp*error + kd*(error - lastError); //calculate speed adjustment using PD
+
+  int leftSpeed = constrain(BASE_SPEED - adjustment, 50, 255); //update the motor speed
+  int rightSpeed = constrain(BASE_SPEED + adjustment, 50, 255);
+
+  //drive the motors with the updated speed
+  driveMotors(rightSpeed, leftSpeed);
 }
 
-void driveMotorRight(int right){
-  digitalWrite(RIGHT_MOTOR_PIN1, HIGH);
-  digitalWrite(RIGHT_MOTOR_PIN2, LOW);
+void readPosition(){
+  int sum_num = 0;  // weighted sum of sensor values
+  int sum_den = 0;  // sum of sensor values
+  for(int i = 0; i < 8; i++){
+    //bring the range of values from 0-4095 to 0-1000 and invert the values so that 0 corresponds to black and 1000 corresponds to white
+    int rawValue = 1000 - int (analogRead(SensorPins[i]) * 1000/4095);
 
-  analogWrite(RIGHT_MOTOR_PWM, right);
+    //calculate weighted sum
+    sum_num += rawValue * i * 1000;
+
+    //calculate sum of values
+    sum_den += rawValue;
+  }
+
+  //calculate position
+  int position = int (sum_num/sum_den);
+  return(position);
 }
 
-void driveMotorLeft(int left){
-  digitalWrite(LEFT_MOTOR_PIN1, HIGH);
-  digitalWrite(LEFT_MOTOR_PIN2, LOW);
+void driveMotors(int rightPWM, int leftPWM){
+  driveLeft(leftPWM);
+  driveRight(rightPWM);
+}
 
-  analogWrite(LEFT_MOTOR_PWM, left);
+void driveLeft(int leftPWM){
+  digitalWrite(LEFT_MOTOR_1, HIGH); //set it to clockwise
+  digitalWrite(LEFT_MOTOR_2, LOW);
+
+  analogWrite(LEFT_PWM, leftPWM); //set speed
+}
+
+void driveRight(int rightPWM){
+  digitalWrite(RIGHT_MOTOR_3, LOW); //set it to clockwise
+  digitalWrite(RIGHT_MOTOR_4, HIGH);
+
+  analogWrite(RIGHT_PWM, rightPWM); //set speed
 }
