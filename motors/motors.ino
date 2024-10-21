@@ -1,13 +1,13 @@
-int leftMotor1 = 2;
-int leftMotor2 = 4;
+#define leftMotor1 2
+#define leftMotor2 4
 
-int rightMotor1 = 17;
-int rightMotor2 = 5;
+#define rightMotor1 17
+#define rightMotor2 5
 
-int rightMotorPWM = 16;
-int leftMotorPWM = 18;
+#define rightMotorPWM 16
+#define leftMotorPWM 18
 
-int baseSpeed = 150;
+#define baseSpeed 150
 
 void setup(){
   pinMode(leftMotor1, OUTPUT);
@@ -28,11 +28,11 @@ void driveRight(int rightPWM, int mode){ //mode 0 means clockwise, mode 1 means 
     case 0:
     digitalWrite(rightMotor1, HIGH);
     digitalWrite(rightMotor2, LOW);
-    break
+    break;
     case 1:
     digitalWrite(rightMotor1, LOW);
     digitalWrite(rightMotor2, HIGH);
-    break
+    break;
   }
 
   analogWrite(rightMotorPWM, rightPWM);
@@ -43,11 +43,11 @@ void driveLeft(int leftPWM, int mode){ //mode 0 means clockwise, mode 1 means an
     case 0:
     digitalWrite(leftMotor1, HIGH);
     digitalWrite(leftMotor2, LOW);
-    break
+    break;
     case 1:
     digitalWrite(leftMotor1, LOW);
     digitalWrite(leftMotor2, HIGH);
-    break
+    break;
   }
 
   analogWrite(leftMotorPWM, leftPWM);
