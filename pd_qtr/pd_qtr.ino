@@ -1,7 +1,16 @@
+#include <QTRSensors.h>
+#include "BluetoothSerial.h"
+
+//Bluetooth Properties
+BluetoothSerial SerialBT;
+String message = "";
+String data = "";
+
 //PD control properties
 int kp = 0; //proportional gain
 int kd = 0; //derivative
 int lastError = 0; //check previous error to calculate error difference
+int goal = 5500;
 
 //right motor properties
 int RIGHT_MOTOR_3 = 32; //IN3
@@ -17,76 +26,131 @@ int LEFT_PWM = 26;
 int BASE_SPEED = 150;
 int motorPins[6] = {RIGHT_MOTOR_3, RIGHT_MOTOR_4, RIGHT_PWM, LEFT_MOTOR_1, LEFT_MOTOR_2, LEFT_PWM};
 
-// sensor array properties
-int SensorPins[8] = {15, 2, 0, 4, 33, 32, 35, 34}; //left to right, A8 to A1
+QTRSensors qtr;
+
+const uint8_t SensorCount = 12;
+uint16_t sensorValues[SensorCount];
+int led_pin = 10;
 
 void setup() {
   // put your setup code here, to run once:
+  qtr.setTypeRC();
+  qtr.setSensorPins((const uint8_t[]){}, SensorCount);
+  pinMode(led_pin, OUTPUT);
   for(int i = 0; i < 6; i++){
-    pinMode(motorPins[i], OUTPUT); //set all motor pins to output;
+    pinMode(motorPins[i], OUTPUT);
   }
-
-  for(int i = 0; i < 8; i++){
-    pinMode(SensorPins[i], INPUT); //set sensor array pins to input
-  }
-  Serial.begin(9600); //begin serial monitor for debugging
-  Serial.println();
+  calibrate_sensor();
+  Serial.begin(115200);
+  SerialBT.begin("My_ESP");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  int position = readPosition(); //reading the position based on raw sensor values
 
-/*  int goal = 3500; //this is the goal where error will be zero
+  findKpKd();
 
-  int error = goal - position; //calculate error, left side positive, right side negative
+  //find position of white line on black background
+  int position = qtr.readLineWhite(sensorValues);
 
-  int adjustment = kp*error + kd*(error - lastError); //calculate speed adjustment using PD
+  //calculate error
+  int error = goal - position;
 
-  int leftSpeed = constrain(BASE_SPEED - adjustment, 50, 255); //update the motor speed
-  int rightSpeed = constrain(BASE_SPEED + adjustment, 50, 255);
+  //calculate adjustment
+  int adjustment = kp*error + kd*(error-lastError);
 
-  //drive the motors with the updated speed
-  driveMotors(rightSpeed, leftSpeed);*/
+  int rightMotorSpeed = constrain(BASE_SPEED + adjustment, 50, 255);
+  int leftMotorSpeed = constrain(BASE_SPEED - adjustment, 50, 255);
+
+  driveMotors(rightMotorSpeed, leftMotorSpeed, 0, 0);
+
+  lastError = error;
 }
 
-int readPosition(){
-  int sum_num = 0;  // weighted sum of sensor values
-  int sum_den = 0;  // sum of sensor values
-  for(int i = 0; i < 8; i++){
-    //bring the range of values from 0-4095 to 0-1000 and invert the values so that 0 corresponds to black and 1000 corresponds to white
-    int rawValue = 1000 - int (analogRead(SensorPins[i]) * 1000/4095);
-    Serial.print(analogRead(SensorPins[i]));
-    Serial.print("\t");
-
-    //calculate weighted sum
-    sum_num += rawValue * i * 1000;
-
-    //calculate sum of values
-    sum_den += rawValue;
+void calibrate_sensor(){
+  digitalWrite(led_pin, HIGH);
+  for (uint16_t i = 0; i < 400; i++)
+  {
+    qtr.calibrate();
   }
-  Serial.println();
-
-  //calculate position
-  int position = int (sum_num/sum_den);
-  return(position);
+  digitalWrite(led_pin, LOW);
 }
 
-void driveMotors(int rightPWM, int leftPWM){
-  driveLeft(leftPWM);
-  driveRight(rightPWM);
+void driveRight(int rightPWM, int mode){ //mode 0 means clockwise, mode 1 means anti clockwise
+  switch(mode){
+    case 0:
+    digitalWrite(RIGHT_MOTOR_3, HIGH);
+    digitalWrite(RIGHT_MOTOR_4, LOW);
+    break;
+    case 1:
+    digitalWrite(RIGHT_MOTOR_3, LOW);
+    digitalWrite(RIGHT_MOTOR_4, HIGH);
+    break;
+  }
+
+  analogWrite(RIGHT_PWM, rightPWM);
 }
 
-void driveLeft(int leftPWM){
-  digitalWrite(LEFT_MOTOR_1, HIGH); //set it to clockwise
+void driveLeft(int leftPWM, int mode){ //mode 0 means clockwise, mode 1 means anti clockwise
+  switch(mode){
+    case 0:
+    digitalWrite(LEFT_MOTOR_1, HIGH);
+    digitalWrite(LEFT_MOTOR_2, LOW);
+    break;
+    case 1:
+    digitalWrite(LEFT_MOTOR_1, LOW);
+    digitalWrite(LEFT_MOTOR_2, HIGH);
+    break;
+  }
+
+  analogWrite(LEFT_PWM, leftPWM);
+}
+
+void driveMotors(int rightPWM, int leftPWM, int rightMode, int leftMode){
+  driveRight(rightPWM, rightMode);
+  driveLeft(leftPWM, leftMode);
+}
+
+void stopMotors(){
+  digitalWrite(RIGHT_MOTOR_3, LOW);
+  digitalWrite(RIGHT_MOTOR_4, LOW);
+  digitalWrite(LEFT_MOTOR_1, LOW);
   digitalWrite(LEFT_MOTOR_2, LOW);
-
-  analogWrite(LEFT_PWM, leftPWM); //set speed
 }
 
-void driveRight(int rightPWM){
-  digitalWrite(RIGHT_MOTOR_3, LOW); //set it to clockwise
-  digitalWrite(RIGHT_MOTOR_4, HIGH);
+void findKpKd(){
+  if(SerialBT.available()){
+    char inComing_char = SerialBT.read();
+    if (inComing_char != "\n"){
+      message += String(inComing_char);
+    }
+    else{
+      message = "";
+    }
+  }
 
-  analogWrite(RIGHT_PWM, rightPWM); //set speed
+  if(message == "kp"){
+    if(SerialBT.available()){
+      char inComing_kp = SerialBT.read();
+      if(inComing_kp != "\n"){
+        data += String(inComing_kp);
+      }
+      else{
+        data = "";
+      }
+    }
+    kp = data.toInt();
+  }
+
+  if(message == "kd"){
+    if(SerialBT.available()){
+      char inComing_kd = SerialBT.read();
+      if(inComing_kd != "\n"){
+        data += String(inComing_kp);
+      }
+      else{
+        data = "";
+      }
+    }
+    kd = data.toInt();
+  }
 }
