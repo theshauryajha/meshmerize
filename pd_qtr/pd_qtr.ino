@@ -47,6 +47,8 @@ void setup() {
 
 void loop() {
 
+  findKpKd();
+
   //find position of white line on black background
   int position = qtr.readLineWhite(sensorValues);
 
