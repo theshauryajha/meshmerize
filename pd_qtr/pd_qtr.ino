@@ -18,7 +18,7 @@ int BASE_SPEED = 150;
 int motorPins[6] = {RIGHT_MOTOR_3, RIGHT_MOTOR_4, RIGHT_PWM, LEFT_MOTOR_1, LEFT_MOTOR_2, LEFT_PWM};
 
 // sensor array properties
-int SensorPins[8] = {15, 2, 0, 4, 16, 17, 5, 18}; //left to right, A8 to A1
+int SensorPins[8] = {15, 2, 0, 4, 33, 32, 35, 34}; //left to right, A8 to A1
 
 void setup() {
   // put your setup code here, to run once:
@@ -37,7 +37,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   int position = readPosition(); //reading the position based on raw sensor values
 
-  int goal = 3500; //this is the goal where error will be zero
+/*  int goal = 3500; //this is the goal where error will be zero
 
   int error = goal - position; //calculate error, left side positive, right side negative
 
@@ -47,15 +47,17 @@ void loop() {
   int rightSpeed = constrain(BASE_SPEED + adjustment, 50, 255);
 
   //drive the motors with the updated speed
-  driveMotors(rightSpeed, leftSpeed);
+  driveMotors(rightSpeed, leftSpeed);*/
 }
 
-void readPosition(){
+int readPosition(){
   int sum_num = 0;  // weighted sum of sensor values
   int sum_den = 0;  // sum of sensor values
   for(int i = 0; i < 8; i++){
     //bring the range of values from 0-4095 to 0-1000 and invert the values so that 0 corresponds to black and 1000 corresponds to white
     int rawValue = 1000 - int (analogRead(SensorPins[i]) * 1000/4095);
+    Serial.print(analogRead(SensorPins[i]));
+    Serial.print("\t");
 
     //calculate weighted sum
     sum_num += rawValue * i * 1000;
@@ -63,6 +65,7 @@ void readPosition(){
     //calculate sum of values
     sum_den += rawValue;
   }
+  Serial.println();
 
   //calculate position
   int position = int (sum_num/sum_den);
