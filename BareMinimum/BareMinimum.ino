@@ -13,7 +13,13 @@ int sensorValues[sensorCount];
 #define leftMotorPWM 33
 #define rightMotorPWM 32
 
-#define baseSpeed 120
+#define baseSpeed 100
+
+int leftHard[] = {1, 1, 1, 0};
+int leftHalf[] = {1, 1, 0, 0};
+int straight[] = {0, 1, 1, 0};
+int rightHalf[] = {0, 0, 1, 1};
+int rightHard[] = {0, 1, 1, 1};
 
 void setup(){
   // put your setup code here, to run once:
@@ -37,17 +43,20 @@ void loop(){
   // put your main code here, to run repeatedly:
   read();
 
-  if(sensorValues[1] == 1 && sensorValues[2] == 1){
-    driveMotors(baseSpeed, baseSpeed, 0, 0);
+  if (comp(sensorValues, leftHard)){
+    driveMotors(baseSpeed, baseSpeed, 1, 0);
   }
-  else if(sensorValues[1] == 1 && sensorValues[2] == 0){
+  else if(comp(sensorValues, leftHalf)){
     driveMotors(0, baseSpeed, 0, 0);
   }
-  else if(sensorValues[1] == 0 && sensorValues[2] == 1){
+  else if (comp(sensorValues, straight)){
+    driveMotors(baseSpeed, baseSpeed, 0, 0);
+  }
+  else if (comp(sensorValues, rightHalf)){
     driveMotors(baseSpeed, 0, 0, 0);
   }
-  else{
-    driveMotors(baseSpeed, baseSpeed, 1, 0);
+  else if (comp(sensorValues, rightHard)){
+    driveMotors(baseSpeed, baseSpeed, 0, 1);
   }
 }
 
