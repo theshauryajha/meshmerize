@@ -60,6 +60,7 @@ void loop(){
 }
 
 void read(){
+  // 0 for white (line), 1 for black (no line)
   for (int i = 0; i < sensorCount; i++){
     sensorValues[i] = digitalRead(sensorPins[i]);
   }
