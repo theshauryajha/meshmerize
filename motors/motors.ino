@@ -24,6 +24,7 @@ void loop(){
   driveMotors(baseSpeed, baseSpeed, 0, 0);
   delay(2000); // run motors for 2 seconds
   stopMotors();
+  delay(2000);
 }
 
 void driveLeft(int leftPWM, int mode){ //mode 0 means clockwise, mode 1 means anti clockwise
@@ -62,8 +63,5 @@ void driveMotors(int leftPWM, int rightPWM, int leftMode, int rightMode){
 }
 
 void stopMotors(){
-  digitalWrite(rightMotor1, LOW);
-  digitalWrite(rightMotor2, LOW);
-  digitalWrite(leftMotor1, LOW);
-  digitalWrite(leftMotor2, LOW);
+  driveMotors(0, 0, 0, 0);
 }

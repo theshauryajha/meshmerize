@@ -1,5 +1,5 @@
-#define sensorCount 8
-const int sensorPins[sensorCount] = {15, 2, 4, 16, 5, 13, 12, 14};
+#define sensorCount 4
+const int sensorPins[sensorCount] = {15, 2, 4, 16};
 int sensorValues[sensorCount];
 
 void setup(){
@@ -20,7 +20,7 @@ void loop(){
     Serial.print('\t');
   }
   Serial.println();
-  
+
   delay(100);
 }
 
