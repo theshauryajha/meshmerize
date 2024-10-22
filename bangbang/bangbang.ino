@@ -1,6 +1,6 @@
-// sensor stuff
-#define sensorCount 8
-const int sensorPins[sensorCount] ={15, 2, 4, 16, 5, 13, 12, 14};
+//sensor stuff
+#define sensorCount 4
+const int sensorPins[sensorCount] = {15, 2, 4, 16};
 int sensorValues[sensorCount];
 
 // motor stuff
@@ -13,9 +13,14 @@ int sensorValues[sensorCount];
 #define leftMotorPWM 33
 #define rightMotorPWM 32
 
-#define baseSpeed 150
+#define baseSpeed 120
 
-void setup() {
+// sensorValues combination
+int straight[sensorCount] = {1, 0, 0, 1};
+int left[sensorCount] = {0, 0, 0, 1};
+int right[sensorCount] = {1, 0, 0, 0};
+
+void setup(){
   // put your setup code here, to run once:
   // sensor stuff
   for (int i = 0; i < sensorCount; i++){
@@ -33,12 +38,39 @@ void setup() {
   Serial.begin(9600);
 }
 
-void loop() {
+void loop(){
   // put your main code here, to run repeatedly:
   read();
-  
-  driveMotors(baseSpeed, baseSpeed, 0, 0);
-  stopMotors();
+
+  if (comp(sensorValues, left)){
+    while (!comp(sensorValues, straight)){
+      driveMotors(baseSpeed, baseSpeed, 1, 0);
+    }
+  }
+
+  else if (comp(sensorValues, right)){
+    while (!comp(sensorValues, straight)){
+      driveMotors(baseSpeed, baseSpeed, 0, 1);
+    }
+  }
+
+  else{
+    driveMotors(baseSpeed, baseSpeed, 0, 0);
+  }
+}
+
+void read(){
+  for (int i = 0; i < sensorCount; i++){
+    sensorValues[i] = digitalRead(sensorPins[i]);
+  }
+}
+
+bool comp(int arr1[sensorCount], int arr2[sensorCount]){
+  for (int i = 0; i < sensorCount; i++){
+    if (arr1[i] != arr2[i])
+      return false;
+  }
+  return true;
 }
 
 void driveLeft(int leftPWM, int mode){ //mode 0 means clockwise, mode 1 means anti clockwise

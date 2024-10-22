@@ -22,6 +22,7 @@ void setup(){
 void loop(){
   // put your main code here, to run repeatedly:
   driveMotors(baseSpeed, baseSpeed, 0, 0);
+  delay(2000);
   stopMotors();
 }
 
