@@ -5,6 +5,7 @@
 //lh high, ll low - clockwise right motor
 //lh low, ll high - counter clockwise right motor
 
+String path = "";
 int final_arr[2] = {0,0};
 //led 14
 // 34 35 switch
@@ -99,14 +100,24 @@ void loop() {
       readLFSsensors();
       if(final_arr[0] == 3){  //if there is no line
         goAndTurn(3);
+      }else{
+        path += "S";
       }
       break;
 
     case 2: //left turn
-      goAndTurn(2);
+      runExtraInch();
+      readLFSsensors();
+      if(final_arr[0] == 3){
+        goAndTurn(2);
+      }else{
+        path += "L";
+        goAndTurn(2);
+      }
       break;
 
     case 3: //no line
+      path += "B";
       stopMotors();
       goAndTurn(2);
       goAndTurn(2);
@@ -123,6 +134,7 @@ void loop() {
         mazeEnd();
       }
       else{
+        path += "L";
         goAndTurn(2);
       }
       break;
@@ -269,14 +281,14 @@ void goAndTurn(int mode){
       analogWrite(LL, basespeed);
       analogWrite(RH, basespeed);
       analogWrite(RL, 0);
-      delay(100);
+      delay(500);
       break;
     case 3:
       analogWrite(LL, 0);
       analogWrite(LH, basespeed);
       analogWrite(RL, basespeed);
       analogWrite(RH, 0);
-      delay(100);
+      delay(500);
       break;
   }
 }
