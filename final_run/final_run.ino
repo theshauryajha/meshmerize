@@ -30,9 +30,9 @@ int maxSpeed = 200;  // Maximum motor speed
 char myData[30] = { 0 }, s1[10], s2[10], s3[10], s4[10];
 
 // Weighted multipliers
-int leftMultiplier[] = { 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0 };
-int straightMultiplier[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-int rightMultiplier[] = { 0, 0, 0, 0, 0, 5, 6, 7, 8, 9, 10, 11 };
+int leftBias[] = { -216, -125, -64, -9, -4, -1, 1, 4, 9, 16, 25, 36 };
+int straightBias[] = { -36, -25, -16, -9, -4, -1, 1, 4, 8, 16, 25, 36 };
+int rightBias[] = { -36, -25, -16, -9, -4, -1, 1, 4, 9, 64, 125, 216 };
 
 // Path string and iterable
 char path[] = "SRLRS";
@@ -87,31 +87,23 @@ void loop() {
     else Serial.println("error in input!");
   }
 
-  int position = qtrrc.readLineWhite(sensorValues);
-  int intersection = checkIntersection();
+  qtrrc.readLineWhite(sensorValues);
+  int position = calculatePosition(straightBias);
 
+  int intersection = checkIntersection();
   if (intersection == 1){
     // There is some sort of intersection -> Make decision where to go based on path string
     switch(path[count++]){
       case 'L':
-        // go left, i.e. make right sensorValues 1000, or tell it that there is no other option other than to go left
-        for (int i = sensorCount/2 + 1; i < sensorCount; i++)
-          sensorValues[i] = 1000;
+        position = calculatePosition(leftBias);
         break;
       case 'R':
-        // go right, i.e. make left sensorValues 1000, or tell it that there is no other option other than to go right
-        for (int i = 0; i < sensorCount/2 - 1; i++)
-          sensorValues[i] = 1000;
+        position = calculatePosition(rightBias);
         break;
       case 'S':
-        // go straight, i.e. make everything except the middle two sensorValues 1000, or tell it has nowhere to turn
-        for (int i = 0; i < sensorCount/2 - 1; i++)
-          sensorValues[i] = 1000;
-        for (int i = sensorCount/2 + 1; i < sensorCount; i++)
-          sensorValues[i] = 1000;
+        calculatePosition(straightBias);
         break;
     }
-    position = calculatePosition();
   }
 
   else if (intersection == -1){
@@ -123,8 +115,8 @@ void loop() {
 
   // else (intersection == 0) implies no intersection, continue normal PID Control
 
-  // Compute error (desired position is 5500 for 12-sensor array)
-  int error = position - 5500;
+  // Desired position = 0
+  int error = position;
   integral += error;                                        // Calculate integral component
   int derivative = error - lastError;                       // Calculate derivative component
   int turn = Kp * error + Ki * integral + Kd * derivative;  // Calculate PID value
@@ -254,10 +246,10 @@ int checkIntersection(){
   return 0; // no intersection
 }
 
-int calculatePosition(){
+int calculatePosition(int multipiers[]){
   int weightedSum = 0, totalSum = 0;
   for (int i = 0; i < sensorCount; i++){
-    weightedSum += i * sensorValues[i];
+    weightedSum += multipliers[i] * sensorValues[i];
     totalSum += sensorValues[i];
   }
 
