@@ -9,7 +9,7 @@ void setup(){
   // put your setup code here, to run once:
   // Initialize sensor array
   qtrrc.setTypeRC();
-  qtrrc.setSensorPins((const uint8_t[]){ 13, 15, 14, 4, 27, 16, 26, 17, 25, 5, 33, 18 }, 12);
+  qtrrc.setSensorPins((const uint8_t[]){ 13, 15, 12, 4, 27, 16, 26, 17, 25, 5, 33, 18 }, 12);
   Serial.begin(9600);
 
   for (int i = 0; i < 250; i++) {
