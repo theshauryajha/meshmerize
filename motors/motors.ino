@@ -4,7 +4,7 @@
 #define RH 21 // IN3
 #define RL 2 // IN4
 
-#define baseSpeed 100; // Base motor speed
+#define baseSpeed 100 // Base motor speed
 
 void setup(){
   // put your setup code here, to run once:
@@ -17,7 +17,7 @@ void setup(){
 
 void loop(){
   // put your main code here, to run repeatedly:
-  driveMotors(baseSpeed, baseSpeed, 0, 0);
+  driveMotors();
   delay(2000); // run motors for 2 seconds
   stopMotors();
   delay(2000);
