@@ -89,12 +89,13 @@ void loop() {
   int position;
   if (intersection() == 1) {
     if (path[count] == 'L')
-      left();
+      leftPID();
     else if (path[count] == 'R')
-      right();
+      rightPID();
     else
-      straight();
+      straightPID();
     count++;
+    delay(100);
   }
   else if (intersection() == -1)
     stop();
@@ -197,17 +198,17 @@ void loop() {
 
 
 int weightedRead(int multipliers[]) {
-  int multiplierSum = 0, totalSum = 0;
+  int weightedSum = 0, totalSum = 0;
   for (int i = 0; i < 12; i++) {
-    multiplierSum += multipliers[i] * sensorValues[i];
-    totalSum += i * 1000;
+    weightedSum += multipliers[i] * sensorValues[i];
+    totalSum += sensorValues[i];
   }
 
-  int position = 1000 * multiplierSum / totalSum;
+  int position = 1000 * weightedSum / totalSum;
   return position;
 }
 
-void left(){
+void leftPID(){
   int position = weightedRead(leftMultiplier);
   // Compute error (desired position is 5500 for 12-sensor array)
   int error = position - 5500;
@@ -244,11 +245,9 @@ void left(){
     analogWrite(RH, rightMotorSpeed);
     analogWrite(RL, 0);
   }
-
-  delay(100);
 }
 
-void right(){
+void rightPID(){
   int position = weightedRead(rightMultiplier);
   // Compute error (desired position is 5500 for 12-sensor array)
   int error = position - 5500;
@@ -285,11 +284,9 @@ void right(){
     analogWrite(RH, rightMotorSpeed);
     analogWrite(RL, 0);
   }
-
-  delay(100);
 }
 
-void straight(){
+void straightPID(){
   int position = weightedRead(straightMultiplier);
   // Compute error (desired position is 5500 for 12-sensor array)
   int error = position - 5500;
@@ -326,8 +323,6 @@ void straight(){
     analogWrite(RH, rightMotorSpeed);
     analogWrite(RL, 0);
   }
-
-  delay(100);
 }
 
 void stop(){
@@ -357,8 +352,10 @@ int intersection(){
     extraInch();
     stop();
     delay(1000);
-    if (left && right)
+    if (left && straight && right)
       return -1; // maze end
+    else if (!left && straight && !right)
+      return 1; // 4 - way
     else{
       extraInchBack();
       stop();
