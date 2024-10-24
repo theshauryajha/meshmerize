@@ -7,7 +7,7 @@
 #define RH 21 // IN3
 #define RL 2 // IN4
 
-#define LED_PIN 12 // pin for LED to glow when Maze is solved
+#define LED_PIN 14 // pin for LED to glow when Maze is solved
 
 // Pololu sensor setup
 QTRSensors qtrrc;
@@ -51,7 +51,7 @@ void setup() {
 
   // Initialize sensor array
   qtrrc.setTypeRC();
-  qtrrc.setSensorPins((const uint8_t[]){ 13, 15, 14, 4, 27, 16, 26, 17, 25, 5, 33, 18 }, 12);
+  qtrrc.setSensorPins((const uint8_t[]){ 13, 15, 12, 4, 27, 16, 26, 17, 25, 5, 33, 18 }, 12);
   Serial.begin(9600);
   // Serial.begin("PID_Tuner"); // Bluetooth device name
 
