@@ -1,46 +1,49 @@
 #include <BluetoothSerial.h>
 #include <QTRSensors.h>
 
-// in1  - 19
-// in 2 - 23
-// in 3 - 21
-// in 4 - 2
-#define RH 21  // Right motor control
-#define LH 19  // Left motor control
-#define RL 2   // Reverse Right motor control
-#define LL 23  // Reverse Left motor control
+// Define motor control pins
+#define LH 19 // IN1
+#define LL 23 // IN2
+#define RH 21 // IN3
+#define RL 2 // IN4
 
-#define LED_PIN 12
+#define LED_PIN 12 // pin for LED to glow when Maze is solved
 
 // Pololu sensor setup
 QTRSensors qtrrc;
-int basespeed = 100;         // Base motor speed
-int maxSpeed = 200;         // Maximum motor speed
-uint16_t sensorValues[12];  // Array to store sensor values
+#define sensorCount 12
+int baseSpeed = 100; // Base motor speed
+int maxSpeed = 200;  // Maximum motor speed
+uint16_t sensorValues[sensorCount];  // Array to store sensor values
+#define threshold 500; // Threshold for white line
 
 // PID constants
-float Kp = 0.035;  // Proportional gain
-float Ki = 0.0;    // Integral gain
-float Kd = 0.044;   // Derivative gain
+float Kp = 0.035; // Proportional gain
+float Ki = 0.0;   // Integral gain
+float Kd = 0.044; // Derivative gain
 int integral = 0;
 int lastError = 0;
+
+// Bluetooth data
 char myData[30] = { 0 }, s1[10], s2[10], s3[10], s4[10];
 
+// Weighted multipliers
 int leftMultiplier[] = { 0, 1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0 };
 int straightMultiplier[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 int rightMultiplier[] = { 0, 0, 0, 0, 0, 5, 6, 7, 8, 9, 10, 11 };
 
-
-int count = 0;
+// Path string and iterable
 char path[] = "SRLRS";
+int count = 0;
 
 void setup() {
-  // Set motor pins as outputs
+  // Declare motor pins as outputs;
+  pinMode(LH, OUTPUT);
+  pinMode(LL, OUTPUT);
   pinMode(RH, OUTPUT);
   pinMode(RL, OUTPUT);
-  pinMode(LL, OUTPUT);
-  pinMode(LH, OUTPUT);
 
+  // Declare LED_PIN as output and set it to be off at the beginning
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
@@ -66,28 +69,32 @@ void setup() {
 void loop() {
   Serial.println("");
   // counter += 1;
-  // Check for incoming Bluetooth Serial data
 
+  // Check for incoming Bluetooth Serial data
   if (Serial.available()) {
     byte m = Serial.readBytesUntil('\n', myData, 20);
-    myData[m] = '\0';  //null-byte
+    myData[m] = '\0';  // null-byte
     if (sscanf(myData, "%[^','],%[^','],%[^','],%[^','],%s", s1, s2, s4, s3) == 4) {
       Kp = atof(s1);
       Kd = atof(s2);
       maxSpeed = atof(s3);
-      basespeed = atof(s4);
+      baseSpeed = atof(s4);
       Serial.println("values updated");
 
-    } else Serial.println("error in input!");
+    }
+    else Serial.println("error in input!");
   }
 
-  qtrrc.read(sensorValues);
-  for (int i = 0; i < 12; i++){
-    map(sensorValues[i], 0, 2500, 0, 1000);
+  // Control Loop
+  qtrrc.read(sensorValues); // Read sensor data
+  for (int i = 0; i < sensorCount; i++){
+    // Incoming values are in the range 0 to 2500
+    map(sensorValues[i], 0, 2500, 0, 1000); // Scale to range 0 to 1000
   }
 
   int position;
   if (intersection() == 1) {
+    // If there is an intersection, check the path array for decision and act on it
     if (path[count] == 'L')
       leftPID();
     else if (path[count] == 'R')
@@ -97,17 +104,15 @@ void loop() {
     count++;
     delay(100);
   }
-  else if (intersection() == -1)
-    stop();
+  // If the end of the maze is found, stop the bot
+  else if (intersection() == -1){
+    digitalWrite(LED_PIN, HIGH); // Turn on LED to indicate Maze is solved
+    stop(); // Stop the bot
+    while (true) {} // Infinite loop with no control signals, bot stays stopped
+  }
 
+  // Continue PID Controlled Line Following
   position = qtrrc.readLineWhite(sensorValues);
-
-  
-  /*for (int i = 0; i < 12; i++){
-    Serial.print(sensorValues[i]);
-    Serial.print('\t');
-  }*/
-
 
   // Compute error (desired position is 5500 for 12-sensor array)
   int error = position - 5500;
@@ -117,16 +122,16 @@ void loop() {
   lastError = error;                                        // Store current error as lastError for next iteration
 
   // Adjust motor speeds based on PID value
-  int leftMotorSpeed = basespeed + turn;
-  int rightMotorSpeed = basespeed - turn;
+  int leftMotorSpeed = baseSpeed + turn;
+  int rightMotorSpeed = baseSpeed - turn;
 
   // Ensure motor speeds are within bounds
   if (leftMotorSpeed > maxSpeed) leftMotorSpeed = maxSpeed;
   if (rightMotorSpeed > maxSpeed) rightMotorSpeed = maxSpeed;
   // if (leftMotorSpeed < 0 && leftMotorSpeed > -70) leftMotorSpeed = 0;
   // if (rightMotorSpeed < 0  && rightMotorSpeed > -70) rightMotorSpeed = 0;
-  if (leftMotorSpeed < 0) leftMotorSpeed = -basespeed;
-  if (rightMotorSpeed < 0) rightMotorSpeed = -basespeed;
+  if (leftMotorSpeed < 0) leftMotorSpeed = -baseSpeed;
+  if (rightMotorSpeed < 0) rightMotorSpeed = -baseSpeed;
 
   // Motor control logic
   if (leftMotorSpeed < 0) {
@@ -145,13 +150,12 @@ void loop() {
     analogWrite(RL, 0);
   }
 
-
+  // Debug sensor values data
   // if (counter % 10 == 0) {
   for (int i = 0; i < 12; i++) {
-    Serial.print(sensorValues[i] > 500 ? 1 : 0);
-    // Serial.print(" ");
+    Serial.print(sensorValues[i] > threshold ? 1 : 0);
+    Serial.print('\t');
   }
-  Serial.print(" ");
   // }
 
   // Output debugging information
@@ -168,7 +172,7 @@ void loop() {
   // Serial.print("\t");
   // Serial.print(Kd);
   // Serial.print("\t");
-  // Serial.println(basespeed);
+  // Serial.println(baseSpeed);
 
   // Send debugging information to Bluetooth
   //  if (counter % 10 == 0) {
@@ -187,8 +191,6 @@ void loop() {
   //  }
   // for (int i = 0; i < )
 
-
-
   //   if (Serial.available()) {
   //     String command = Serial.readStringUntil('\n');
   //     handleCommand(command);
@@ -196,10 +198,9 @@ void loop() {
   // }
 }
 
-
 int weightedRead(int multipliers[]) {
   int weightedSum = 0, totalSum = 0;
-  for (int i = 0; i < 12; i++) {
+  for (int i = 0; i < sensorCount; i++) {
     weightedSum += multipliers[i] * sensorValues[i];
     totalSum += sensorValues[i];
   }
@@ -218,16 +219,16 @@ void leftPID(){
   lastError = error;                                        // Store current error as lastError for next iteration
 
   // Adjust motor speeds based on PID value
-  int leftMotorSpeed = basespeed + turn;
-  int rightMotorSpeed = basespeed - turn;
+  int leftMotorSpeed = baseSpeed + turn;
+  int rightMotorSpeed = baseSpeed - turn;
 
   // Ensure motor speeds are within bounds
   if (leftMotorSpeed > maxSpeed) leftMotorSpeed = maxSpeed;
   if (rightMotorSpeed > maxSpeed) rightMotorSpeed = maxSpeed;
   // if (leftMotorSpeed < 0 && leftMotorSpeed > -70) leftMotorSpeed = 0;
   // if (rightMotorSpeed < 0  && rightMotorSpeed > -70) rightMotorSpeed = 0;
-  if (leftMotorSpeed < 0) leftMotorSpeed = -basespeed;
-  if (rightMotorSpeed < 0) rightMotorSpeed = -basespeed;
+  if (leftMotorSpeed < 0) leftMotorSpeed = -baseSpeed;
+  if (rightMotorSpeed < 0) rightMotorSpeed = -baseSpeed;
 
   // Motor control logic
   if (leftMotorSpeed < 0) {
@@ -257,16 +258,16 @@ void rightPID(){
   lastError = error;                                        // Store current error as lastError for next iteration
 
   // Adjust motor speeds based on PID value
-  int leftMotorSpeed = basespeed + turn;
-  int rightMotorSpeed = basespeed - turn;
+  int leftMotorSpeed = baseSpeed + turn;
+  int rightMotorSpeed = baseSpeed - turn;
 
   // Ensure motor speeds are within bounds
   if (leftMotorSpeed > maxSpeed) leftMotorSpeed = maxSpeed;
   if (rightMotorSpeed > maxSpeed) rightMotorSpeed = maxSpeed;
   // if (leftMotorSpeed < 0 && leftMotorSpeed > -70) leftMotorSpeed = 0;
   // if (rightMotorSpeed < 0  && rightMotorSpeed > -70) rightMotorSpeed = 0;
-  if (leftMotorSpeed < 0) leftMotorSpeed = -basespeed;
-  if (rightMotorSpeed < 0) rightMotorSpeed = -basespeed;
+  if (leftMotorSpeed < 0) leftMotorSpeed = -baseSpeed;
+  if (rightMotorSpeed < 0) rightMotorSpeed = -baseSpeed;
 
   // Motor control logic
   if (leftMotorSpeed < 0) {
@@ -296,16 +297,16 @@ void straightPID(){
   lastError = error;                                        // Store current error as lastError for next iteration
 
   // Adjust motor speeds based on PID value
-  int leftMotorSpeed = basespeed + turn;
-  int rightMotorSpeed = basespeed - turn;
+  int leftMotorSpeed = baseSpeed + turn;
+  int rightMotorSpeed = baseSpeed - turn;
 
   // Ensure motor speeds are within bounds
   if (leftMotorSpeed > maxSpeed) leftMotorSpeed = maxSpeed;
   if (rightMotorSpeed > maxSpeed) rightMotorSpeed = maxSpeed;
   // if (leftMotorSpeed < 0 && leftMotorSpeed > -70) leftMotorSpeed = 0;
   // if (rightMotorSpeed < 0  && rightMotorSpeed > -70) rightMotorSpeed = 0;
-  if (leftMotorSpeed < 0) leftMotorSpeed = -basespeed;
-  if (rightMotorSpeed < 0) rightMotorSpeed = -basespeed;
+  if (leftMotorSpeed < 0) leftMotorSpeed = -baseSpeed;
+  if (rightMotorSpeed < 0) rightMotorSpeed = -baseSpeed;
 
   // Motor control logic
   if (leftMotorSpeed < 0) {
@@ -330,8 +331,6 @@ void stop(){
   analogWrite(LL, 0);
   analogWrite(RH, 0);
   analogWrite(RL, 0);
-
-  digitalWrite(LED_PIN, HIGH);
 }
 
 int intersection(){
@@ -339,12 +338,13 @@ int intersection(){
   bool straight = sensorValues[5] > 500 && sensorValues[6] > 500;
   bool right = sensorValues[11] > 500;
 
+  // Debugging
   Serial.print("L");
   Serial.print(left);
-  Serial.print("R");
-  Serial.print(right);
   Serial.print("S");
   Serial.print(straight);
+  Serial.print("R");
+  Serial.print(right);
 
   if (left && right){
     stop();
@@ -395,17 +395,17 @@ int intersection(){
 }
 
 void extraInch(){
-  analogWrite(LH, basespeed);
+  analogWrite(LH, baseSpeed);
   analogWrite(LL, 0);
-  analogWrite(RH, basespeed);
+  analogWrite(RH, baseSpeed);
   analogWrite(RL, 0);
   delay(10);
 }
 
 void extraInchBack(){
   analogWrite(LH, 0);
-  analogWrite(LL, basespeed);
+  analogWrite(LL, baseSpeed);
   analogWrite(RH, 0);
-  analogWrite(RL, basespeed);
+  analogWrite(RL, baseSpeed);
   delay(10);
 }
