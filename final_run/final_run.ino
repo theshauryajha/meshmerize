@@ -87,34 +87,41 @@ void loop() {
     else Serial.println("error in input!");
   }
 
-  // Control Loop
-  qtrrc.read(sensorValues); // Read sensor data
-  for (int i = 0; i < sensorCount; i++){
-    // Incoming values are in the range 0 to 2500
-    map(sensorValues[i], 0, 2500, 0, 1000); // Scale to range 0 to 1000
+  int position = qtrrc.readLineWhite(sensorValues);
+  int intersection = checkIntersection();
+
+  if (intersection == 1){
+    // There is some sort of intersection -> Make decision where to go based on path string
+    switch(path[count++]){
+      case 'L':
+        // go left, i.e. make right sensorValues 1000, or tell it that there is no other option other than to go left
+        for (int i = sensorCount/2 + 1; i < sensorCount; i++)
+          sensorValues[i] = 1000;
+        break;
+      case 'R':
+        // go right, i.e. make left sensorValues 1000, or tell it that there is no other option other than to go right
+        for (int i = 0; i < sensorCount/2 - 1; i++)
+          sensorValues[i] = 1000;
+        break;
+      case 'S':
+        // go straight, i.e. make everything except the middle two sensorValues 1000, or tell it has nowhere to turn
+        for (int i = 0; i < sensorCount/2 - 1; i++)
+          sensorValues[i] = 1000;
+        for (int i = sensorCount/2 + 1; i < sensorCount; i++)
+          sensorValues[i] = 1000;
+        break;
+    }
+    position = calculatePosition();
   }
 
-  int position;
-  if (intersection() == 1) {
-    // If there is an intersection, check the path array for decision and act on it
-    if (path[count] == 'L')
-      leftPID();
-    else if (path[count] == 'R')
-      rightPID();
-    else
-      straightPID();
-    count++;
-    delay(100);
-  }
-  // If the end of the maze is found, stop the bot
-  else if (intersection() == -1){
-    digitalWrite(LED_PIN, HIGH); // Turn on LED to indicate Maze is solved
-    stop(); // Stop the bot
-    while (true) {} // Infinite loop with no control signals, bot stays stopped
+  else if (intersection == -1){
+    // end of maze
+    digitalWrite(LED_PIN, HIGH);
+    stopMotors();
+    while (true) {}
   }
 
-  // Continue PID Controlled Line Following
-  position = qtrrc.readLineWhite(sensorValues);
+  // else (intersection == 0) implies no intersection, continue normal PID Control
 
   // Compute error (desired position is 5500 for 12-sensor array)
   int error = position - 5500;
@@ -154,7 +161,7 @@ void loop() {
 
   // Debug sensor values data
   // if (counter % 10 == 0) {
-  for (int i = 0; i < 12; i++) {
+  for (int i = 0; i < sensorCount; i++) {
     Serial.print(sensorValues[i] > threshold ? 1 : 0);
     Serial.print('\t');
   }
@@ -200,134 +207,6 @@ void loop() {
   // }
 }
 
-int weightedRead(int multipliers[]) {
-  int weightedSum = 0, totalSum = 0;
-  for (int i = 0; i < sensorCount; i++) {
-    weightedSum += multipliers[i] * sensorValues[i];
-    totalSum += sensorValues[i];
-  }
-
-  int position = 1000 * weightedSum / totalSum;
-  return position;
-}
-
-void leftPID(){
-  int position = weightedRead(leftMultiplier);
-  // Compute error (desired position is 5500 for 12-sensor array)
-  int error = position - 5500;
-  integral += error;                                        // Calculate integral component
-  int derivative = error - lastError;                       // Calculate derivative component
-  int turn = Kp * error + Ki * integral + Kd * derivative;  // Calculate PID value
-  lastError = error;                                        // Store current error as lastError for next iteration
-
-  // Adjust motor speeds based on PID value
-  int leftMotorSpeed = baseSpeed + turn;
-  int rightMotorSpeed = baseSpeed - turn;
-
-  // Ensure motor speeds are within bounds
-  if (leftMotorSpeed > maxSpeed) leftMotorSpeed = maxSpeed;
-  if (rightMotorSpeed > maxSpeed) rightMotorSpeed = maxSpeed;
-  // if (leftMotorSpeed < 0 && leftMotorSpeed > -70) leftMotorSpeed = 0;
-  // if (rightMotorSpeed < 0  && rightMotorSpeed > -70) rightMotorSpeed = 0;
-  if (leftMotorSpeed < 0) leftMotorSpeed = -baseSpeed;
-  if (rightMotorSpeed < 0) rightMotorSpeed = -baseSpeed;
-
-  // Motor control logic
-  if (leftMotorSpeed < 0) {
-    analogWrite(LL, leftMotorSpeed);  // Reverse left motor
-    analogWrite(LH, 0);
-  } else {
-    analogWrite(LH, leftMotorSpeed);
-    analogWrite(LL, 0);
-  }
-
-  if (rightMotorSpeed < 0) {
-    analogWrite(RL, rightMotorSpeed);  // Reverse right motor
-    analogWrite(RH, 0);
-  } else {
-    analogWrite(RH, rightMotorSpeed);
-    analogWrite(RL, 0);
-  }
-}
-
-void rightPID(){
-  int position = weightedRead(rightMultiplier);
-  // Compute error (desired position is 5500 for 12-sensor array)
-  int error = position - 5500;
-  integral += error;                                        // Calculate integral component
-  int derivative = error - lastError;                       // Calculate derivative component
-  int turn = Kp * error + Ki * integral + Kd * derivative;  // Calculate PID value
-  lastError = error;                                        // Store current error as lastError for next iteration
-
-  // Adjust motor speeds based on PID value
-  int leftMotorSpeed = baseSpeed + turn;
-  int rightMotorSpeed = baseSpeed - turn;
-
-  // Ensure motor speeds are within bounds
-  if (leftMotorSpeed > maxSpeed) leftMotorSpeed = maxSpeed;
-  if (rightMotorSpeed > maxSpeed) rightMotorSpeed = maxSpeed;
-  // if (leftMotorSpeed < 0 && leftMotorSpeed > -70) leftMotorSpeed = 0;
-  // if (rightMotorSpeed < 0  && rightMotorSpeed > -70) rightMotorSpeed = 0;
-  if (leftMotorSpeed < 0) leftMotorSpeed = -baseSpeed;
-  if (rightMotorSpeed < 0) rightMotorSpeed = -baseSpeed;
-
-  // Motor control logic
-  if (leftMotorSpeed < 0) {
-    analogWrite(LL, leftMotorSpeed);  // Reverse left motor
-    analogWrite(LH, 0);
-  } else {
-    analogWrite(LH, leftMotorSpeed);
-    analogWrite(LL, 0);
-  }
-
-  if (rightMotorSpeed < 0) {
-    analogWrite(RL, rightMotorSpeed);  // Reverse right motor
-    analogWrite(RH, 0);
-  } else {
-    analogWrite(RH, rightMotorSpeed);
-    analogWrite(RL, 0);
-  }
-}
-
-void straightPID(){
-  int position = weightedRead(straightMultiplier);
-  // Compute error (desired position is 5500 for 12-sensor array)
-  int error = position - 5500;
-  integral += error;                                        // Calculate integral component
-  int derivative = error - lastError;                       // Calculate derivative component
-  int turn = Kp * error + Ki * integral + Kd * derivative;  // Calculate PID value
-  lastError = error;                                        // Store current error as lastError for next iteration
-
-  // Adjust motor speeds based on PID value
-  int leftMotorSpeed = baseSpeed + turn;
-  int rightMotorSpeed = baseSpeed - turn;
-
-  // Ensure motor speeds are within bounds
-  if (leftMotorSpeed > maxSpeed) leftMotorSpeed = maxSpeed;
-  if (rightMotorSpeed > maxSpeed) rightMotorSpeed = maxSpeed;
-  // if (leftMotorSpeed < 0 && leftMotorSpeed > -70) leftMotorSpeed = 0;
-  // if (rightMotorSpeed < 0  && rightMotorSpeed > -70) rightMotorSpeed = 0;
-  if (leftMotorSpeed < 0) leftMotorSpeed = -baseSpeed;
-  if (rightMotorSpeed < 0) rightMotorSpeed = -baseSpeed;
-
-  // Motor control logic
-  if (leftMotorSpeed < 0) {
-    analogWrite(LL, leftMotorSpeed);  // Reverse left motor
-    analogWrite(LH, 0);
-  } else {
-    analogWrite(LH, leftMotorSpeed);
-    analogWrite(LL, 0);
-  }
-
-  if (rightMotorSpeed < 0) {
-    analogWrite(RL, rightMotorSpeed);  // Reverse right motor
-    analogWrite(RH, 0);
-  } else {
-    analogWrite(RH, rightMotorSpeed);
-    analogWrite(RL, 0);
-  }
-}
-
 void stop(){
   analogWrite(LH, 0);
   analogWrite(LL, 0);
@@ -335,65 +214,55 @@ void stop(){
   analogWrite(RL, 0);
 }
 
-int intersection(){
-  bool left = sensorValues[0] > 500;
-  bool straight = sensorValues[5] > 500 && sensorValues[6] > 500;
-  bool right = sensorValues[11] > 500;
+int checkIntersection(){
+  bool left = sensorValues[0] < 500;
+  bool right = sensorValues[11] < 500;
 
-  // Debugging
-  Serial.print("L");
-  Serial.print(left);
-  Serial.print("S");
-  Serial.print(straight);
-  Serial.print("R");
-  Serial.print(right);
+  int totalSum = 0;
+  for (int i = 0; i < sensorCount++; i++){
+    totalSum += sensorValues[i];
+  }
+  bool straight = (totalSum != 0);
 
   if (left && right){
-    stop();
-    delay(1000);
     extraInch();
-    stop();
-    delay(1000);
     if (left && straight && right)
       return -1; // maze end
     else if (!left && straight && !right)
       return 1; // 4 - way
     else{
       extraInchBack();
-      stop();
-      delay(1000);
       return 1; // LR T-junc
     }
   }
   else if (left && straight){
-    stop();
-    delay(1000);
     extraInch();
-    stop();
-    delay(1000);
     if (straight) return 1; // LS T-junc
     else{
       extraInchBack();
-      stop();
-      delay(1000);
       return 0; // no intersection
     }
   }
   else if (straight && right){
-    stop();
-    delay(1000);
     extraInch();
-    stop();
-    delay(1000);
     if (straight) return 1; // RS T-junc
     else{
       extraInchBack();
-      stop();
-      delay(1000);
       return 0; // no intersection
     }
   }
   return 0; // no intersection
+}
+
+int calculatePosition(){
+  int weightedSum = 0, totalSum = 0;
+  for (int i = 0; i < sensorCount; i++){
+    weightedSum += i * sensorValues[i];
+    totalSum += sensorValues[i];
+  }
+
+  int position = 1000 * weightedSum / totalSum;
+  return position;
 }
 
 void extraInch(){
