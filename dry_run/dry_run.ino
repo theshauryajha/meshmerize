@@ -1,5 +1,9 @@
 #include <BluetoothSerial.h>
 #include <QTRSensors.h>
+//rh high, rl low - clockwise left motor
+//rh low, rl high - counter clockwise left motor
+//lh high, ll low - clockwise right motor
+//lh low, ll high - counter clockwise right motor
 
 int final_arr[2] = {0,0};
 //led 14
@@ -10,22 +14,22 @@ int final_arr[2] = {0,0};
 // in 4 - 2
 #define RH 21  // Right motor control
 #define LH 19  // Left motor control
-#define RL   2 // Reverse Right motor control
+#define RL 2 // Reverse Right motor control
 #define LL 23 // Reverse Left motor control
 #define led 14
 
 
 // Pololu sensor setup
 QTRSensors qtrrc;
-int basespeed = 75; // Base motor speed
-int maxSpeed = 100; // Maximum motor speed
+int basespeed = 100; // Base motor speed
+int maxSpeed = 200; // Maximum motor speed
 uint16_t sensorValues[12]; // Array to store sensor values
 
 // PID constants
-float Kp = 0.005;  // Proportional gain
+float Kp = 0.038;  // Proportional gain
 float Ki = 0.0;  // Integral gain......
 
-float Kd = 0.05;  // Derivative gain
+float Kd = 0.044;  // Derivative gain
 int integral = 0;
 int lastError = 0;
 char myData[30] = { 0 } , s1[10], s2[10],s3[10],s4[10];
@@ -45,7 +49,7 @@ void setup() {
   Serial.begin(9600);
  // Serial.begin("PID_Tuner"); // Bluetooth device name
 
-  Serial.println("Bluetooth Device is Ready to Pair");
+  Serial.print("Bluetooth Device is Ready to Pair");
  // Serial.println("Bluetooth Device is Ready to Pair");
 
 
@@ -83,10 +87,11 @@ void loop() {
 
   int error = final_arr[1];
   int mode = final_arr[0];
-  // Serial.print("E");
-  // Serial.print(error);
-  // Serial.print("M");
-  // Serial.print(mode);
+
+  Serial.print("E");
+  Serial.print(error);
+  Serial.print("M");
+  Serial.print(mode);
 
   switch(mode){
     case 1: //right turn
@@ -183,15 +188,18 @@ void readLFSsensors(){
   int error;
 
   int s = 0;
-  for (int i = 1; i < 11; i++)
+  sensorValues[0] = 1000 - sensorValues[0];
+  sensorValues[11] = 1000 - sensorValues[11];
+  for (int i = 1; i < 11; i++){
+    sensorValues[i] = 1000 - sensorValues[i];
     s += sensorValues[i];
-  Serial.print(s);
+  }
 
-  if(sensorValues[0] > 500){
+  if(sensorValues[11] > 500){
     mode = 1; //RIGHT TURN
     error = 0;
   }
-  if(sensorValues[11] > 500){
+  if(sensorValues[0] > 500){
     mode = 2; //LEFT TURN
     error = 0;
   }
@@ -250,7 +258,7 @@ void PID(int error){
 void runExtraInch(){
   lastError = 0;
   PID(0);
-  delay(20);
+  delay(40);
   stopMotors();
 }
 
@@ -261,15 +269,16 @@ void goAndTurn(int mode){
       analogWrite(LL, basespeed);
       analogWrite(RH, basespeed);
       analogWrite(RL, 0);
+      delay(100);
       break;
     case 3:
       analogWrite(LL, 0);
       analogWrite(LH, basespeed);
       analogWrite(RL, basespeed);
       analogWrite(RH, 0);
+      delay(100);
       break;
   }
-  delay(30);
 }
 void mazeEnd(){
   while(true){
@@ -283,5 +292,5 @@ void stopMotors(){
   analogWrite(LH, 0);
   analogWrite(RL, 0);
   analogWrite(RH, 0);
-  delay(20);
+  delay(1000);
 }
