@@ -37,7 +37,7 @@ char path[] = "SRLRS";
 int count = 0;
 
 void setup() {
-  // Declare motor pins as outputs;
+  // Declare motor pins as outputs
   pinMode(LH, OUTPUT);
   pinMode(LL, OUTPUT);
   pinMode(RH, OUTPUT);
