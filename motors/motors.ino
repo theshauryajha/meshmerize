@@ -1,22 +1,18 @@
-#define leftMotor1 17
-#define leftMotor2 18
+// Define motor control pins
+#define LH 19 // IN1
+#define LL 23 // IN2
+#define RH 21 // IN3
+#define RL 2 // IN4
 
-#define rightMotor1 19
-#define rightMotor2 21
-
-#define leftMotorPWM 33
-#define rightMotorPWM 32
-
-#define baseSpeed 150
+#define baseSpeed 100; // Base motor speed
 
 void setup(){
   // put your setup code here, to run once:
-  pinMode(leftMotor1, OUTPUT);
-  pinMode(leftMotor2, OUTPUT);
-  pinMode(rightMotor1, OUTPUT);
-  pinMode(rightMotor2, OUTPUT);
-  pinMode(leftMotorPWM, OUTPUT);
-  pinMode(rightMotorPWM, OUTPUT);
+  // Declare motor pins as outputs
+  pinMode(LH, OUTPUT);
+  pinMode(LL, OUTPUT);
+  pinMode(RH, OUTPUT);
+  pinMode(RL, OUTPUT);
 }
 
 void loop(){
@@ -27,41 +23,16 @@ void loop(){
   delay(2000);
 }
 
-void driveLeft(int leftPWM, int mode){ //mode 0 means clockwise, mode 1 means anti clockwise
-  switch(mode){
-    case 0:
-      digitalWrite(leftMotor1, HIGH);
-      digitalWrite(leftMotor2, LOW);
-      break;
-    case 1:
-      digitalWrite(leftMotor1, LOW);
-      digitalWrite(leftMotor2, HIGH);
-      break;
-  }
-
-  analogWrite(leftMotorPWM, leftPWM);
-}
-
-void driveRight(int rightPWM, int mode){ //mode 0 means clockwise, mode 1 means anti clockwise
-  switch(mode){
-    case 0:
-      digitalWrite(rightMotor1, HIGH);
-      digitalWrite(rightMotor2, LOW);
-      break;
-    case 1:
-      digitalWrite(rightMotor1, LOW);
-      digitalWrite(rightMotor2, HIGH);
-      break;
-  }
-
-  analogWrite(rightMotorPWM, rightPWM);
-}
-
-void driveMotors(int leftPWM, int rightPWM, int leftMode, int rightMode){
-  driveLeft(leftPWM, leftMode);
-  driveRight(rightPWM, rightMode);
+void driveMotors(){
+  analogWrite(LH, baseSpeed);
+  analogWrite(LL, 0);
+  analogWrite(RH, baseSpeed);
+  analogWrite(RL, 0);
 }
 
 void stopMotors(){
-  driveMotors(0, 0, 0, 0);
+  analogWrite(LH, 0);
+  analogWrite(LL, 0);
+  analogWrite(RH, 0);
+  analogWrite(RL, 0);
 }

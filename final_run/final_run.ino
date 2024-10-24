@@ -12,8 +12,6 @@
 // Pololu sensor setup
 QTRSensors qtrrc;
 #define sensorCount 12
-int baseSpeed = 100; // Base motor speed
-int maxSpeed = 200;  // Maximum motor speed
 uint16_t sensorValues[sensorCount];  // Array to store sensor values
 #define threshold 500; // Threshold for white line
 
@@ -23,6 +21,10 @@ float Ki = 0.0;   // Integral gain
 float Kd = 0.044; // Derivative gain
 int integral = 0;
 int lastError = 0;
+
+// Motor control variables
+int baseSpeed = 100; // Base motor speed
+int maxSpeed = 200;  // Maximum motor speed
 
 // Bluetooth data
 char myData[30] = { 0 }, s1[10], s2[10], s3[10], s4[10];

@@ -1,20 +1,27 @@
-#define sensorCount 8
- int sensorPins[sensorCount] = {15, 2, 4, 16, 5, 13, 12, 14};
-int sensorValues[sensorCount];
+#include <QTRSensors.h>
+
+// Polulu sensor setup
+QTRSensors qtrrc;
+#define sensorCount 12
+uint16_t sensorValues[sensorCount];  // Array to store sensor values
 
 void setup(){
   // put your setup code here, to run once:
-  for (int i = 0; i < sensorCount; i++){
-    pinMode(sensorPins[i], INPUT);
-  }
-
+  // Initialize sensor array
+  qtrrc.setTypeRC();
+  qtrrc.setSensorPins((const uint8_t[]){ 13, 15, 14, 4, 27, 16, 26, 17, 25, 5, 33, 18 }, 12);
   Serial.begin(9600);
+
+  for (int i = 0; i < 250; i++) {
+    qtrrc.calibrate();
+    delay(20);
+    Serial.println("Calibrating...");
+  }
 }
 
 void loop(){
   // put your main code here, to run repeatedly:
-  read();
-
+  qtrrc.readLineWhite(sensorValues);
   for (int i = 0; i < sensorCount; i++){
     Serial.print(sensorValues[i]);
     Serial.print('\t');
@@ -22,10 +29,4 @@ void loop(){
   Serial.println();
 
   delay(100);
-}
-
-void read(){
-  for (int i = 0; i < sensorCount; i++){
-    sensorValues[i] = digitalRead(sensorPins[i]);
-  }
 }
