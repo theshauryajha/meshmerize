@@ -13,7 +13,8 @@
 QTRSensors qtrrc;
 #define sensorCount 12
 uint16_t sensorValues[sensorCount];  // Array to store sensor values
-#define threshold 500; // Threshold for white line
+bool left, straight, right;
+#define threshold 500 // Threshold for white line
 
 // PID constants
 float Kp = 0.035; // Proportional gain
@@ -63,7 +64,6 @@ void setup() {
     qtrrc.calibrate();
     delay(20);
     Serial.println("Calibrating...");
-    //Serial.println("Calibrating...");
   }
 }
 
@@ -87,11 +87,11 @@ void loop() {
     else Serial.println("error in input!");
   }
 
-  qtrrc.readLineWhite(sensorValues);
+  read();
   int position = calculatePosition(straightBias);
-
   int intersection = checkIntersection();
-  if (intersection == 1){
+
+  /*if (intersection == 1){
     // There is some sort of intersection -> Make decision where to go based on path string
     switch(path[count++]){
       case 'L':
@@ -100,20 +100,22 @@ void loop() {
       case 'R':
         position = calculatePosition(rightBias);
         break;
-      case 'S':
-        calculatePosition(straightBias);
+      default:
+        positon = calculateBias(straightBias);
         break;
     }
   }
 
   else if (intersection == -1){
     // end of maze
-    digitalWrite(LED_PIN, HIGH);
-    stopMotors();
-    while (true) {}
-  }
+    while true{
+      digitalWrite(LED_PIN, HIGH);
+      stopMotors();
+    }
+  }*/
 
   // else (intersection == 0) implies no intersection, continue normal PID Control
+  Serial.println(intersection);
 
   // Desired position = 0
   int error = position;
@@ -153,10 +155,10 @@ void loop() {
 
   // Debug sensor values data
   // if (counter % 10 == 0) {
-  for (int i = 0; i < sensorCount; i++) {
+  /*for (int i = 0; i < sensorCount; i++) {
     Serial.print(sensorValues[i] > threshold ? 1 : 0);
     Serial.print('\t');
-  }
+  }*/
   // }
 
   // Output debugging information
@@ -199,7 +201,7 @@ void loop() {
   // }
 }
 
-void stop(){
+void stopMotors(){
   analogWrite(LH, 0);
   analogWrite(LL, 0);
   analogWrite(RH, 0);
@@ -207,15 +209,6 @@ void stop(){
 }
 
 int checkIntersection(){
-  bool left = sensorValues[0] < 500;
-  bool right = sensorValues[11] < 500;
-
-  int totalSum = 0;
-  for (int i = 0; i < sensorCount++; i++){
-    totalSum += sensorValues[i];
-  }
-  bool straight = (totalSum != 0);
-
   if (left && right){
     extraInch();
     if (left && straight && right)
@@ -246,7 +239,7 @@ int checkIntersection(){
   return 0; // no intersection
 }
 
-int calculatePosition(int multipiers[]){
+int calculatePosition(int multipliers[]){
   int weightedSum = 0, totalSum = 0;
   for (int i = 0; i < sensorCount; i++){
     weightedSum += multipliers[i] * sensorValues[i];
@@ -262,7 +255,10 @@ void extraInch(){
   analogWrite(LL, 0);
   analogWrite(RH, baseSpeed);
   analogWrite(RL, 0);
-  delay(10);
+  delay(40);
+  stopMotors();
+
+  read();
 }
 
 void extraInchBack(){
@@ -270,5 +266,22 @@ void extraInchBack(){
   analogWrite(LL, baseSpeed);
   analogWrite(RH, 0);
   analogWrite(RL, baseSpeed);
-  delay(10);
+  delay(40);
+  stopMotors();
+}
+
+void read(){
+  qtrrc.readLineWhite(sensorValues);
+  
+  int totalSum = 0;
+  sensorValues[0] = 1000 - sensorValues[0];
+  sensorValues[11] = 1000 - sensorValues[11];
+  for (int i = 1; i < sensorCount-1; i++){
+    sensorValues[i] = 1000 - sensorValues[i];
+    totalSum += sensorValues[i];
+  }
+  straight = (totalSum != 0);
+  
+  left = sensorValues[0] > threshold;
+  right = sensorValues[11] > threshold;
 }
