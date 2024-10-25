@@ -36,7 +36,7 @@ int straightBias[] = { -36, -25, -16, -9, -4, -1, 1, 4, 8, 16, 25, 36 };
 int rightBias[] = { -36, -25, -16, -9, -4, -1, 1, 4, 9, 64, 125, 216 };
 
 // Path string and iterable
-char path[] = "SRLRS";
+char path[] = "SLLRL";
 int count = 0;
 
 void setup() {
@@ -91,7 +91,7 @@ void loop() {
   int position = calculatePosition(straightBias);
   int intersection = checkIntersection();
 
-  /*if (intersection == 1){
+  if (intersection == 1){
     // There is some sort of intersection -> Make decision where to go based on path string
     switch(path[count++]){
       case 'L':
@@ -101,18 +101,18 @@ void loop() {
         position = calculatePosition(rightBias);
         break;
       default:
-        positon = calculateBias(straightBias);
+        position = calculatePosition(straightBias);
         break;
     }
   }
 
   else if (intersection == -1){
     // end of maze
-    while true{
+    while (true){
       digitalWrite(LED_PIN, HIGH);
       stopMotors();
     }
-  }*/
+  }
 
   // else (intersection == 0) implies no intersection, continue normal PID Control
   Serial.println(intersection);
