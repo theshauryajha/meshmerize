@@ -27,7 +27,7 @@ int maxSpeed = 200; // Maximum motor speed
 uint16_t sensorValues[12]; // Array to store sensor values
 
 // PID constants
-float Kp = 0.038;  // Proportional gain
+float Kp = 0.035;  // Proportional gain
 float Ki = 0.0;  // Integral gain......
 
 float Kd = 0.044;  // Derivative gain
