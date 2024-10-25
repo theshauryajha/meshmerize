@@ -16,12 +16,17 @@ uint16_t sensorValues[sensorCount];  // Array to store sensor values
 bool left, straight, right;
 #define threshold 500 // Threshold for white line
 
+// vglobal thingies
+int bias_control_iterration_count = 0;
+int detected_flag = 0;
+
 // PID constants
 float Kp = 0.035; // Proportional gain
 float Ki = 0.0;   // Integral gain
 float Kd = 0.044; // Derivative gain
 int integral = 0;
 int lastError = 0;
+int position;
 
 // Motor control variables
 int baseSpeed = 100; // Base motor speed
@@ -32,12 +37,12 @@ char myData[30] = { 0 }, s1[10], s2[10], s3[10], s4[10];
 
 // Weighted multipliers
 int leftBias[] = { -216, -125, -64, -9, -4, -1, 1, 4, 9, 16, 25, 36 };
-int straightBias[] = { -36, -25, -16, -9, -4, -1, 1, 4, 8, 16, 25, 36 };
+int straightBias[] = { -36, -25, -16, -9, -4, -1, 1, 4, 9, 16, 25, 36 };
 int rightBias[] = { -36, -25, -16, -9, -4, -1, 1, 4, 9, 64, 125, 216 };
 
 // Path string and iterable
-char path[] = "SLLRL";
-int count = 0;
+char path[] = "RLS";
+int string_array_index = 0;
 
 void setup() {
   // Declare motor pins as outputs
@@ -88,34 +93,58 @@ void loop() {
   }
 
   read();
-  int position = calculatePosition(straightBias);
-  int intersection = checkIntersection();
-
-  if (intersection == 1){
-    // There is some sort of intersection -> Make decision where to go based on path string
-    switch(path[count++]){
-      case 'L':
-        position = calculatePosition(leftBias);
-        break;
-      case 'R':
-        position = calculatePosition(rightBias);
-        break;
-      default:
-        position = calculatePosition(straightBias);
-        break;
+  if(detected_flag==1){
+    if(bias_control_iterration_count < 20){
+      // There is some sort of intersection -> Make decision where to go based on path string
+      switch(path[string_array_index]){
+        case 'L':
+          Serial.println("Using left bias");
+          position = calculatePosition(leftBias);
+          break;
+        case 'R':
+          Serial.println("Using right bias");
+          position = calculatePosition(rightBias);
+          break;
+        default:
+          Serial.println("Using straight bias");
+          position = calculatePosition(straightBias);
+          break;
+      bias_control_iterration_count++;
+      }
+      
+    }
+    else{
+      string_array_index++;
+      detected_flag=0; //makes detected flag 0 after 20 interations, defaults to normal behaviour
     }
   }
+  
+  else{
+    //read();
+    Serial.println("Using straight bias");
+    int position = calculatePosition(straightBias);
+    int intersection = checkIntersection();
+    Serial.println("Currently at intersection");
 
-  else if (intersection == -1){
-    // end of maze
-    while (true){
-      digitalWrite(LED_PIN, HIGH);
-      stopMotors();
+    if (intersection == 1){
+      detected_flag=1;
+      bias_control_iterration_count=0;
+      //Serial.println(path[string_array_index]);
+      //digitalWrite(LED_PIN, HIGH);
+    }
+
+    else if (intersection == -1){
+      // end of maze
+      while (true){
+        digitalWrite(LED_PIN, HIGH);
+        stopMotors();
+      }
     }
   }
+  
+  //Serial.println(intersection);
 
   // else (intersection == 0) implies no intersection, continue normal PID Control
-  Serial.println(intersection);
 
   // Desired position = 0
   int error = position;
@@ -154,7 +183,7 @@ void loop() {
   }
 
   // Debug sensor values data
-  // if (counter % 10 == 0) {
+  // if (string_array_indexer % 10 == 0) {
   /*for (int i = 0; i < sensorCount; i++) {
     Serial.print(sensorValues[i] > threshold ? 1 : 0);
     Serial.print('\t');
