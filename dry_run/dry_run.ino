@@ -130,8 +130,11 @@ void loop() {
     case 5: //horizontal line
       runExtraInch();
       readLFSsensors();
-      if(final_arr[0] == 5){  //check if end of maze or not
-        mazeEnd();
+      if(final_arr[0] == 5){
+        runExtraInch();
+        if(final_arr[0] == 5){
+          mazeEnd();
+        }  //check if end of maze or not
       }
       else{
         path += "L";
@@ -270,7 +273,7 @@ void PID(int error){
 void runExtraInch(){
   lastError = 0;
   PID(0);
-  delay(40);
+  delay(100);
   stopMotors();
 }
 
@@ -281,14 +284,14 @@ void goAndTurn(int mode){
       analogWrite(LL, basespeed);
       analogWrite(RH, basespeed);
       analogWrite(RL, 0);
-      delay(500);
+      delay(220);
       break;
     case 3:
       analogWrite(LL, 0);
       analogWrite(LH, basespeed);
       analogWrite(RL, basespeed);
       analogWrite(RH, 0);
-      delay(500);
+      delay(220);
       break;
   }
 }
@@ -304,5 +307,13 @@ void stopMotors(){
   analogWrite(LH, 0);
   analogWrite(RL, 0);
   analogWrite(RH, 0);
-  delay(1000);
+  delay(100);
+}
+
+void calibrate(){
+  analogWrite(LH, 0);
+  analogWrite(LL, basespeed);
+  analogWrite(RH, basespeed);
+  analogWrite(RL, 0);
+  qtrrc.calibrate();
 }
