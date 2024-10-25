@@ -22,7 +22,7 @@ int final_arr[2] = {0,0};
 
 // Pololu sensor setup
 QTRSensors qtrrc;
-int basespeed = 100; // Base motor speed
+int basespeed = 150; // Base motor speed
 int maxSpeed = 200; // Maximum motor speed
 uint16_t sensorValues[12]; // Array to store sensor values
 
@@ -99,7 +99,7 @@ void loop() {
       runExtraInch();
       readLFSsensors();
       if(final_arr[0] == 3){  //if there is no line
-        goAndTurn(3);
+        goAndTurn(3, 90);
       }else{
         path += "S";
       }
@@ -109,18 +109,17 @@ void loop() {
       runExtraInch();
       readLFSsensors();
       if(final_arr[0] == 3){
-        goAndTurn(2);
+        goAndTurn(2, 90);
       }else{
         path += "L";
-        goAndTurn(2);
+        goAndTurn(2, 90);
       }
       break;
 
     case 3: //no line
       path += "B";
       stopMotors();
-      goAndTurn(2);
-      goAndTurn(2);
+      goAndTurn(2, 180);
       break;
 
     case 4: //following line
@@ -138,7 +137,7 @@ void loop() {
       }
       else{
         path += "L";
-        goAndTurn(2);
+        goAndTurn(2, 90);
       }
       break;
   }
@@ -273,26 +272,36 @@ void PID(int error){
 void runExtraInch(){
   lastError = 0;
   PID(0);
-  delay(100);
+  delay(23);
   stopMotors();
 }
 
-void goAndTurn(int mode){
-  switch(mode){
-    case 2:
-      analogWrite(LH, 0);
-      analogWrite(LL, basespeed);
-      analogWrite(RH, basespeed);
-      analogWrite(RL, 0);
-      delay(220);
-      break;
-    case 3:
-      analogWrite(LL, 0);
-      analogWrite(LH, basespeed);
-      analogWrite(RL, basespeed);
-      analogWrite(RH, 0);
-      delay(220);
-      break;
+void goAndTurn(int mode, int deg){
+  switch(deg){
+    case 90:
+    switch(mode){
+      case 2:
+        analogWrite(LH, 0);
+        analogWrite(LL, basespeed);
+        analogWrite(RH, basespeed);
+        analogWrite(RL, 0);
+        delay(190);
+        break;
+      case 3:
+        analogWrite(LL, 0);
+        analogWrite(LH, basespeed);
+        analogWrite(RL, basespeed);
+        analogWrite(RH, 0);
+        delay(190);
+        break;
+    }
+    break;
+    case 180:
+    analogWrite(LH, 0);
+    analogWrite(LL, basespeed);
+    analogWrite(RH, basespeed);
+    analogWrite(RL, 0);
+    delay(300);
   }
 }
 void mazeEnd(){
@@ -307,7 +316,7 @@ void stopMotors(){
   analogWrite(LH, 0);
   analogWrite(RL, 0);
   analogWrite(RH, 0);
-  delay(100);
+  delay(1000);
 }
 
 void calibrate(){
