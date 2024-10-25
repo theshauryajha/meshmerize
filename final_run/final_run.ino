@@ -104,14 +104,6 @@ void loop() {
         positon = calculateBias(straightBias);
         break;
     }
-  }
-
-  else if (intersection == -1){
-    // end of maze
-    while true{
-      digitalWrite(LED_PIN, HIGH);
-      stopMotors();
-    }
   }*/
 
   // else (intersection == 0) implies no intersection, continue normal PID Control
@@ -268,6 +260,8 @@ void extraInchBack(){
   analogWrite(RL, baseSpeed);
   delay(40);
   stopMotors();
+
+  read();0
 }
 
 void read(){
