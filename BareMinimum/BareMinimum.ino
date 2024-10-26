@@ -125,14 +125,18 @@ void loop() {
       readLFSsensors();
       if(final_arr[0] == 3){  // aage kuch nahi hai sirf right hai
         goAndTurn(3);
+        Serial.print("Only right - turning right");
       }else{
         // intersection of right and straight
+        Serial.print("Right or straight");
         switch(decision){
           case 'R':
+            Serial.print("optimal path says go right");
             goAndTurn(3);
             break;
           case 'S':
-            PID(error);
+            Serial.print("optimal path says go straight");
+            PID(error); ()
             break;
         }
         pathIndex++;
@@ -145,13 +149,17 @@ void loop() {
       readLFSsensors();
       if(final_arr[0] == 3){ // aage kuch nahi hai sirf left hai
         goAndTurn(2);
+        Serial.print("Only left - turning left");
       }else{
         // intersection of left and straight
+        Serial.print("Left or straight");
         switch(decision){
           case 'L':
+            Serial.print("optimal path says go left");
             goAndTurn(2);
             break;
           case 'S':
+            Serial.print("optimal paath says go straight");
             PID(error);
             break;
         }
@@ -161,6 +169,7 @@ void loop() {
       break;
 
     case 3: //no line
+      Serial.print("Nothing in front, making U Turn");
       // bot left the line
       //path += "B";
       stopMotors();
@@ -169,6 +178,7 @@ void loop() {
       break;
 
     case 4: //following line
+      Serial.print("normal pid from toshan code");
       PID(error);
       break;
 
@@ -184,14 +194,18 @@ void loop() {
       }
       else if (final_arr[0] == 4){
         // 4 way intersection
+        Serial.print("4 way junction");
         switch(decision){
           case 'L':
+            Serial.print("optimal path says go left");
             goAndTurn(2);
             break;
           case 'R':
+            Serial.print("optimal path says go right");          
             goAndTurn(3);
             break;
           case 'S':
+            Serial.print("optimal path says go straight");            
             PID(error);
             break;
         }
@@ -200,11 +214,14 @@ void loop() {
       }
       else{
         // LR only T junction
+        Serial.print("Left and Right only");
         switch(decision){
           case 'L':
+            Serial.print("optimal path says go left");
             goAndTurn(2);
             break;
           case 'R':
+            Serial.print("optimal path says go right");
             goAndTurn(3);
             break;
         }
